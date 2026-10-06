@@ -90,6 +90,16 @@ create policy "members manage own records"
   on public.attendance_records for all
   using (public.is_center_member(center_id))
   with check (public.is_center_member(center_id));
+
+-- 6. divisions composite uniqueness: unique (center_id, name)
+-- Drop any legacy global unique constraint on name alone:
+alter table public.divisions drop constraint if exists divisions_name_key;
+drop index if exists public.divisions_name_key;
+drop index if exists public.divisions_name_idx;
+
+-- Add composite unique constraint scoped to each center:
+alter table public.divisions drop constraint if exists divisions_center_id_name_key;
+alter table public.divisions add constraint divisions_center_id_name_key unique (center_id, name);
 ```
 
 ## Verify isolation (run as two different logins)

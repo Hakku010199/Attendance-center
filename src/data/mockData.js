@@ -9,7 +9,7 @@ const NAMES = ["John Smith", "Sarah Thomas", "Priya Nair", "Arjun Menon", "Fatim
 let n = 0;
 const makeStudents = (divisionId, count) => Array.from({ length: count }, (_, i) => {
   n += 1;
-  return { id: `s${n}`, studentId: `STU${String(n).padStart(3, "0")}`, name: `${NAMES[(n - 1) % 10]}${n > 10 ? " " + String.fromCharCode(64 + Math.ceil(n / 10)) : ""}`, rollNumber: i + 1, divisionId, status: "active" };
+  return { id: `s${n}`, studentId: `STU${String(n).padStart(3, "0")}`, name: `${NAMES[(n - 1) % 10]}${n > 10 ? " " + String.fromCharCode(64 + Math.ceil(n / 10)) : ""}`, rollNumber: i + 1, divisionId, status: "active", mobile: `+91 98765 ${String(10000 + n).slice(1)}` };
 });
 
 export const db = {

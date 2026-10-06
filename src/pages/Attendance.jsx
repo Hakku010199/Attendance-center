@@ -59,7 +59,7 @@ export default function Attendance() {
 
   return (
     <>
-      <PageHeader title="Daily Attendance" text={`Audit what was marked — ${fmtDate(date)}.`} />
+      <PageHeader title="Daily Attendancee" text={`Audit what was marked — ${fmtDate(date)}.`} />
       <div className="toolbar toolbar--att">
         <div className="field"><label htmlFor="att-date">Date</label><input id="att-date" className="control" type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} /></div>
         <Select id="att-div" label="Division" placeholder="All Divisions" options={active.map((d) => ({ value: d.id, label: d.name }))} value={divisionId} onChange={(e) => setDivisionId(e.target.value)} />
@@ -74,7 +74,7 @@ export default function Attendance() {
         <section className="card card--flush">
           {students.length === 0 ? <EmptyState title="No records" text={divisionId ? "No active students in this division for this date." : "Pick a division to view its daily records."} /> : (
             <div className="table-wrap"><table className="table">
-              <thead><tr><th>Roll No.</th><th>Student Name</th><th>Status</th><th className="th-right">Mark</th></tr></thead>
+              <thead><tr><th>Roll No.</th><th>Student Name</th><th>Status</th><th>Mobile</th><th className="th-right">Mark</th></tr></thead>
               <tbody>{students.map((s) => {
               const isAbsent = absent.includes(s.id);
               return (
@@ -82,6 +82,7 @@ export default function Attendance() {
                   <td data-label="Roll No">{s.rollNumber}</td>
                   <td data-label="Name"><strong>{s.name}</strong> <small className="muted">{s.studentId}</small></td>
                   <td data-label="Status">{isAbsent ? <span className="badge-absent">Absent</span> : <span className="badge-present">Present</span>}</td>
+                  <td data-label="Mobile">{s.mobile || "—"}</td>
                   <td className="cell-actions">
                   <div className="seg" role="group" aria-label={`Attendance for ${s.name}`}>
                     <button type="button" className={`seg-btn seg-btn--present ${!isAbsent ? "on" : ""}`} aria-pressed={!isAbsent} onClick={() => mark(s.id, false)}>Present</button>

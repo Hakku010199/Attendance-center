@@ -1,30 +1,44 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import Icon from "../common/Icon.jsx";
 
-// Office-style nav: Dashboard + Students + Daily Attendance + History + Divisions.
-// Routes are unchanged (auth/onboarding untouched); only the shell layout is redesigned.
-const SECTIONS = [
-  { title: null, links: [{ to: "/portal", label: "Dashboard", icon: "dashboard", end: true }] },
-  {
-    title: "Management",
-    links: [
-      { to: "/students", label: "Students", icon: "students" },
-      { to: "/attendance", label: "Daily Attendance", icon: "daily" },
-      { to: "/divisions", label: "Divisions", icon: "divisions" },
-    ],
-  },
-  { title: "Reports", links: [{ to: "/reports", label: "History", icon: "history" }] },
+const NAV_ITEMS = [
+  { to: "/portal", label: "Dashboard", icon: "dashboard", end: true },
+  { to: "/attendance", label: "Daily Wise Attendance", icon: "daily" },
+  { to: "/reports", label: "History", icon: "history" },
 ];
 
-const Link = ({ l, onNavigate }) => (
-  <NavLink to={l.to} end={l.end} title={l.label} onClick={onNavigate} className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`}>
+const MANAGEMENT_ITEMS = [
+  { to: "/students", label: "Students", icon: "students" },
+  { to: "/divisions", label: "Divisions", icon: "divisions" },
+];
+
+const Link = ({ l, onNavigate, className = "" }) => (
+  <NavLink
+    to={l.to}
+    end={l.end}
+    title={l.label}
+    onClick={onNavigate}
+    className={({ isActive }) => `nav-link ${className} ${isActive ? "nav-link--active" : ""}`}
+  >
     <Icon name={l.icon} /><span className="nav-text">{l.label}</span>
   </NavLink>
 );
 
-// Desktop aside + mobile overlay drawer (Office pattern: OfficeSidebar).
+// Desktop aside + mobile overlay drawer.
 export default function Sidebar({ center, user, open, onClose, onSignOut }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isManagementActive = location.pathname === "/students" || location.pathname === "/divisions";
+  const [managementOpen, setManagementOpen] = useState(isManagementActive);
+
+  useEffect(() => {
+    if (isManagementActive) {
+      setManagementOpen(true);
+    }
+  }, [isManagementActive]);
+
   const signOut = async () => {
     if (onSignOut) await onSignOut();
     navigate("/login", { replace: true });
@@ -38,12 +52,33 @@ export default function Sidebar({ center, user, open, onClose, onSignOut }) {
           <div className="nav-text"><small>CENTER</small><b>{center.name}</b></div>
         </div>
         <nav className="nav">
-          {SECTIONS.map((s) => (
-            <div key={s.title ?? "main"} className="nav-section">
-              {s.title && <span className="nav-title nav-text">{s.title}</span>}
-              {s.links.map((l) => <Link key={l.to} l={l} onNavigate={onClose} />)}
-            </div>
+          {NAV_ITEMS.map((l) => (
+            <Link key={l.to} l={l} onNavigate={onClose} />
           ))}
+
+          <div className="nav-group">
+            <button
+              type="button"
+              className={`nav-link nav-toggle ${isManagementActive ? "nav-toggle--active" : ""} ${managementOpen ? "nav-toggle--open" : ""}`}
+              onClick={() => setManagementOpen((v) => !v)}
+              aria-expanded={managementOpen}
+              title="Management"
+            >
+              <Icon name="management" />
+              <span className="nav-text">Management</span>
+              <span className={`nav-text nav-chevron ${managementOpen ? "nav-chevron--open" : ""}`}>
+                <Icon name="chevron" size={14} />
+              </span>
+            </button>
+
+            {managementOpen && (
+              <div className="nav-sub" role="group" aria-label="Management options">
+                {MANAGEMENT_ITEMS.map((l) => (
+                  <Link key={l.to} l={l} onNavigate={onClose} className="nav-sub-link" />
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
         <div className="sidebar-bottom">
           <Link l={{ to: "/settings", label: "Settings", icon: "settings" }} onNavigate={onClose} />

@@ -1,20 +1,49 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const sanitize = (val) => {
+  if (!val || typeof val !== "string") return "";
+  return val.trim().replace(/^['"]|['"]$/g, "").trim();
+};
+
+// Vite requires direct static property access (`import.meta.env.VITE_*`)
+// to replace environment variables at transform time.
+const rawUrl =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.SUPABASE_URL) ||
+  (typeof process !== "undefined" && process.env?.VITE_SUPABASE_URL) ||
+  (typeof process !== "undefined" && process.env?.SUPABASE_URL) ||
+  "";
+
+const rawKey =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_KEY) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.SUPABASE_PUBLISHABLE_KEY) ||
+  (typeof import.meta !== "undefined" && import.meta.env?.SUPABASE_ANON_KEY) ||
+  (typeof process !== "undefined" && process.env?.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+  (typeof process !== "undefined" && process.env?.VITE_SUPABASE_ANON_KEY) ||
+  "";
+
+const supabaseUrl = sanitize(rawUrl);
+const supabaseKey = sanitize(rawKey);
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
     supabaseKey &&
-    !String(supabaseUrl).includes("placeholder") &&
-    !String(supabaseKey).includes("placeholder") &&
-    !String(supabaseUrl).includes("your-project-ref")
+    !supabaseUrl.includes("placeholder") &&
+    !supabaseKey.includes("placeholder") &&
+    !supabaseUrl.includes("your-project-ref") &&
+    !supabaseKey.includes("your-publishable-anon-key")
 );
 
 if (!isSupabaseConfigured) {
   console.warn(
-    "[supabase] Missing or placeholder VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY. " +
-      "Create a `.env` file from `.env.example` and restart `npm run dev`. Auth/database calls will fail until configured."
+    "[supabase] Supabase is not configured. " +
+      "URL detected: " +
+      Boolean(supabaseUrl) +
+      ", Key detected: " +
+      Boolean(supabaseKey) +
+      ". Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY) are set in .env, then restart your Vite dev server."
   );
 }
 

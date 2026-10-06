@@ -55,7 +55,7 @@ export default function Login() {
         {!isSupabaseConfigured && (
           <p className="form-error" role="alert">
             Supabase is not configured. Create a <code>.env</code> file with{" "}
-            <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>, then restart the dev server.
+            <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> (or <code>VITE_SUPABASE_ANON_KEY</code>), then restart the dev server.
           </p>
         )}
         <form noValidate onSubmit={submit} className="auth-form">

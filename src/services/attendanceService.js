@@ -45,7 +45,7 @@ export const getAttendance = async (date, divisionId) => {
   const center_id = await requireCenterId();
   const { data: students, error: sErr } = await supabase
     .from("students")
-    .select("id, student_id, name, roll_number, division_id, status")
+    .select("*")
     .eq("center_id", center_id)
     .eq("division_id", divisionId)
     .eq("status", "active")
@@ -58,6 +58,7 @@ export const getAttendance = async (date, divisionId) => {
     rollNumber: s.roll_number,
     divisionId: s.division_id,
     status: s.status,
+    mobile: s.mobile || s.phone || "",
   }));
   const { data: session } = await supabase
     .from("attendance_sessions")

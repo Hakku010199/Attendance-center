@@ -51,28 +51,54 @@ export const saveDivision = async (v, id) => {
   try {
     const center_id = await requireCenterId();
     const errors = {};
-    if (!v.name?.trim()) errors.name = "Division name is required.";
+    const trimmedName = v?.name?.trim();
+    if (!trimmedName) errors.name = "Division name is required.";
     if (Object.keys(errors).length) return { errors };
-    // Name must be unique WITHIN this center only — another center may reuse it.
-    const { data: existing, error: fErr } = await supabase
+
+    // Duplicate check: scoped strictly to the current user's center_id.
+    // Another center is allowed to have a division with the identical name.
+    let checkQuery = supabase
       .from("divisions")
       .select("id, name")
       .eq("center_id", center_id);
-    if (fErr) return { error: "Unable to save division. Please try again." };
-    if ((existing ?? []).some((d) => d.id !== id && same(d.name, v.name)))
-      return { errors: { name: "A division with this name already exists." } };
     if (id) {
-      const { error } = await supabase
+      checkQuery = checkQuery.neq("id", id);
+    }
+    const { data: existing, error: fErr } = await checkQuery;
+    if (fErr) return { error: "Unable to save division. Please try again." };
+
+    if ((existing ?? []).some((d) => same(d.name, trimmedName))) {
+      return { errors: { name: "A division with this name already exists." } };
+    }
+
+    if (id) {
+      const { data: updated, error } = await supabase
         .from("divisions")
-        .update({ name: v.name.trim(), status: v.status, updated_at: new Date().toISOString() })
+        .update({ name: trimmedName, status: v.status, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("center_id", center_id);
-      if (error) return { error: "Unable to save division. Please try again." };
+        .eq("center_id", center_id)
+        .select();
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        if (error.code === "23505" || msg.includes("duplicate") || msg.includes("unique")) {
+          return { errors: { name: "A division with this name already exists." } };
+        }
+        return { error: "Unable to save division. Please try again." };
+      }
+      if (!updated || updated.length === 0) {
+        return { error: "Division not found or access denied." };
+      }
     } else {
       const { error } = await supabase
         .from("divisions")
-        .insert({ center_id, name: v.name.trim(), status: v.status ?? "active" });
-      if (error) return { error: "Unable to create division. Please try again." };
+        .insert({ center_id, name: trimmedName, status: v.status ?? "active" });
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        if (error.code === "23505" || msg.includes("duplicate") || msg.includes("unique")) {
+          return { errors: { name: "A division with this name already exists." } };
+        }
+        return { error: "Unable to create division. Please try again." };
+      }
     }
     notifyDivisionsUpdated();
     return { data: true };
@@ -93,8 +119,16 @@ export const deleteDivision = async (id) => {
     if (kErr) return { error: "Unable to delete division. Please try again." };
     if ((kids ?? []).length > 0)
       return { error: "This division contains students. Reassign or remove them first." };
-    const { error } = await supabase.from("divisions").delete().eq("id", id).eq("center_id", center_id);
+    const { data: deleted, error } = await supabase
+      .from("divisions")
+      .delete()
+      .eq("id", id)
+      .eq("center_id", center_id)
+      .select();
     if (error) return { error: "Unable to delete division. Please try again." };
+    if (!deleted || deleted.length === 0) {
+      return { error: "Division not found or access denied." };
+    }
     notifyDivisionsUpdated();
     return { data: true };
   } catch (e) {

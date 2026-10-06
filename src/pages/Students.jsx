@@ -10,6 +10,7 @@ import Select from "../components/common/Select.jsx";
 import { useToast } from "../components/common/Toast.jsx";
 import StudentForm from "../components/students/StudentForm.jsx";
 import ImportStudentsModal from "../components/students/ImportStudentsModal.jsx";
+import StudentImportModal from "../components/students/StudentImportModal.jsx";
 import useLoad from "../hooks/useLoad.js";
 import useDivisions from "../hooks/useDivisions.js";
 import { usePortal } from "../components/layout/AppLayout.jsx";
@@ -33,6 +34,7 @@ export default function Students() {
   const [form, setForm] = useState(null);
   const [formKey, setFormKey] = useState(0);
   const [importOpen, setImportOpen] = useState(false);
+  const [smartImportOpen, setSmartImportOpen] = useState(false);
   const [summary, setSummary] = useState(null);
   const [del, setDel] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -76,7 +78,7 @@ export default function Students() {
 
   return (
     <>
-      <PageHeader title="Students" text="Manage all students in your center."><><Button variant="secondary" onClick={() => setImportOpen(true)}><Icon name="download" size={16} /> Import Excel</Button><Button onClick={() => setForm({ student: null })}><Icon name="plus" size={16} /> Add Student</Button></></PageHeader>
+      <PageHeader title="Students" text="Manage all students in your center."><><Button variant="secondary" onClick={() => setSmartImportOpen(true)}><Icon name="download" size={16} /> Import Students</Button><Button onClick={() => setForm({ student: null })}><Icon name="plus" size={16} /> Add Student</Button></></PageHeader>
       {divError && <div className="notice" role="alert">{divError}</div>}
       <Async state={state}>{(students) => {
         const term = debouncedQ.trim().toLowerCase();
@@ -103,6 +105,16 @@ export default function Students() {
               )}
             </section>
             {form && <Modal title={form.student ? "Edit Student" : "Add Student"} onClose={() => setForm(null)}><StudentForm key={formKey} initial={form.student} divisions={divisions} onSave={save} onCancel={() => setForm(null)} rollRef={rollRef} /></Modal>}
+            {smartImportOpen && (
+              <StudentImportModal
+                divisions={activeDivisions(divisions)}
+                onClose={() => setSmartImportOpen(false)}
+                onImportComplete={(s) => {
+                  state.reload();
+                  toast(`Imported ${s.successfullyImported} student${s.successfullyImported === 1 ? "" : "s"}.`);
+                }}
+              />
+            )}
             {importOpen && <ImportStudentsModal divisions={activeDivisions(divisions)} defaultDivisionId={division} onClose={() => setImportOpen(false)} onImportComplete={onImportComplete} />}
             {summary && (
               <Modal title="Import Summary" onClose={() => setSummary(null)}>

@@ -45,7 +45,7 @@ export default function Register() {
     if (r.data?.session) {
       navigate("/login", { replace: true });
     } else {
-      setSuccess("Account created successfully. Please check your email to verify your account.");
+      setSuccess("Registration successful. Please check your email to verify your account.");
     }
   };
 
@@ -58,7 +58,7 @@ export default function Register() {
         {!isSupabaseConfigured && (
           <p className="form-error" role="alert">
             Supabase is not configured. Create a <code>.env</code> file with{" "}
-            <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>, then restart the dev server.
+            <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> (or <code>VITE_SUPABASE_ANON_KEY</code>), then restart the dev server.
           </p>
         )}
         {success ? (

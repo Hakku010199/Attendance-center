@@ -3,7 +3,7 @@
 import { isSupabaseConfigured, supabase } from "../lib/supabase.js";
 
 export const SUPABASE_NOT_CONFIGURED_MSG =
-  "Supabase is not configured. Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY, then restart the dev server.";
+  "Supabase is not configured. Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY), then restart the dev server.";
 
 const friendlyAuthError = (error, fallback) => {
   const fb = fallback || "Unable to sign in. Please try again.";
@@ -27,6 +27,8 @@ const friendlyAuthError = (error, fallback) => {
     return "New registrations are disabled for this project. Enable email signups in Supabase Auth settings.";
   if (msg.includes("email rate limit") || msg.includes("rate limit") || msg.includes("too many"))
     return "Too many attempts. Please wait a minute and try again.";
+  if (msg.includes("error sending confirmation email") || msg.includes("error sending") || msg.includes("confirmation email") || msg.includes("smtp") || msg.includes("mail server") || code === "unexpected_failure")
+    return "Supabase could not send the confirmation email through the configured mail server. Check Supabase Auth → SMTP settings (host, port, username, Resend API key as password, verified sender) and try again.";
   if (code === "email_address_invalid" || msg.includes('email address "') || (msg.includes("email address") && msg.includes("is invalid")))
     return "Supabase rejected this email address. Check Auth → Settings in your Supabase dashboard: allowed email domains / disposable-email blocking may be enabled. Try a different email or update those settings.";
   // Last resort: include the real reason (dev) so failures are debuggable.
@@ -37,7 +39,16 @@ const friendlyAuthError = (error, fallback) => {
 export const registerUser = async ({ email, password }) => {
   if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
   try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // Supabase Auth generates the confirmation token/URL and delivers it
+    // through the Resend SMTP provider configured in the Supabase dashboard.
+    // Never call Resend from the browser.
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
     if (error) return { error: friendlyAuthError(error, "Unable to create your account. Please try again."), raw: error };
     return { data };
   } catch (e) {
@@ -78,13 +89,27 @@ export const getSession = async () => {
 export const sendPasswordReset = async (email, redirectTo) => {
   if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
   try {
+    // Supabase Auth generates the recovery token/URL and delivers it through
+    // the Resend SMTP provider. Generic errors: never reveal account existence
+    // at the service layer — the page shows the generic message on success.
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectTo || `${window.location.origin}/login`,
+      redirectTo: redirectTo || `${window.location.origin}/reset-password`,
     });
     if (error) return { error: friendlyAuthError(error, "Unable to send reset email. Please check the address and try again."), raw: error };
     return { data };
   } catch (e) {
     return { error: friendlyAuthError(e, "Unable to send reset email. Please check the address and try again."), raw: e };
+  }
+};
+
+export const updatePassword = async (newPassword) => {
+  if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
+  try {
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { error: friendlyAuthError(error, "Unable to update your password. Please try again."), raw: error };
+    return { data };
+  } catch (e) {
+    return { error: friendlyAuthError(e, "Unable to update your password. Please try again."), raw: e };
   }
 };
 

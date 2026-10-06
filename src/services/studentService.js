@@ -24,6 +24,7 @@ const mapRow = (s, divName) => ({
   divisionId: s.division_id,
   divisionName: divName ?? "Unassigned",
   status: s.status,
+  mobile: s.mobile || s.phone || "",
   center_id: s.center_id,
 });
 
@@ -31,7 +32,7 @@ export const listStudents = async () => {
   const center_id = await requireCenterId();
   const { data: students, error } = await supabase
     .from("students")
-    .select("id, center_id, student_id, name, roll_number, division_id, status")
+    .select("*")
     .eq("center_id", center_id)
     .order("created_at", { ascending: true });
   if (error) throw new Error("Unable to load students. Please try again.");
@@ -72,12 +73,42 @@ export const saveStudent = async (v, id) => {
         .maybeSingle();
       if (dErr || !div) return { errors: { divisionId: "Division is required." } };
     }
-    const row = { student_id: v.studentId.trim(), name: v.name.trim(), roll_number: Number(v.rollNumber), division_id: v.divisionId, status: v.status ?? "active" };
+    const row = {
+      student_id: v.studentId.trim(),
+      name: v.name.trim(),
+      roll_number: Number(v.rollNumber),
+      division_id: v.divisionId,
+      status: v.status ?? "active",
+      ...(v.mobile?.trim() ? { mobile: v.mobile.trim() } : {}),
+    };
+    const isMobileMissing = (err) => {
+      if (!err) return false;
+      const msg = String(err.message || "").toLowerCase();
+      return (
+        msg.includes("mobile") &&
+        (msg.includes("schema cache") ||
+          msg.includes("does not exist") ||
+          msg.includes("could not find") ||
+          err.code === "PGRST204" ||
+          err.code === "42703")
+      );
+    };
+
     if (id) {
-      const { error } = await supabase.from("students").update(row).eq("id", id).eq("center_id", center_id);
+      let { error } = await supabase.from("students").update(row).eq("id", id).eq("center_id", center_id);
+      if (isMobileMissing(error)) {
+        const { mobile, ...rowWithoutMobile } = row;
+        const retry = await supabase.from("students").update(rowWithoutMobile).eq("id", id).eq("center_id", center_id);
+        error = retry.error;
+      }
       if (error) return { error: "Unable to save student. Please try again." };
     } else {
-      const { error } = await supabase.from("students").insert({ center_id, ...row });
+      let { error } = await supabase.from("students").insert({ center_id, ...row });
+      if (isMobileMissing(error)) {
+        const { mobile, ...rowWithoutMobile } = row;
+        const retry = await supabase.from("students").insert({ center_id, ...rowWithoutMobile });
+        error = retry.error;
+      }
       if (error) return { error: "Unable to create student. Please try again." };
     }
     return { data: true };

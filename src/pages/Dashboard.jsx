@@ -10,8 +10,8 @@ const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good 
 
 // Dashboard keeps its existing design. Center/user now come from the Supabase session.
 export default function Dashboard() {
-  const { center, user } = usePortal();
-  const state = useLoad(getOverview);
+  const { center, user, attendanceRefreshKey, divisionsKey } = usePortal();
+  const state = useLoad(getOverview, [attendanceRefreshKey, divisionsKey]);
   const date = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   return (
     <>
