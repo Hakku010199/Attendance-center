@@ -16,14 +16,15 @@ const requireCenterId = async () => {
   return membership.center_id;
 };
 
-const mapRow = (s, divName) => ({
+const mapRow = (s, divName, idx) => ({
   id: s.id,
   studentId: s.student_id,
+  studentNo: idx !== undefined ? idx + 1 : s.student_id,
   name: s.name,
   rollNumber: s.roll_number,
   divisionId: s.division_id,
   divisionName: divName ?? "Unassigned",
-  status: s.status,
+  status: s.status ?? "active",
   mobile: s.mobile || s.phone || "",
   center_id: s.center_id,
 });
@@ -42,7 +43,7 @@ export const listStudents = async () => {
     .eq("center_id", center_id);
   if (dErr) throw new Error("Unable to load students. Please try again.");
   const names = Object.fromEntries((divisions ?? []).map((d) => [d.id, d.name]));
-  return (students ?? []).map((s) => mapRow(s, s.division_id ? names[s.division_id] : "Unassigned"));
+  return (students ?? []).map((s, idx) => mapRow(s, s.division_id ? names[s.division_id] : "Unassigned", idx));
 };
 
 export const saveStudent = async (v, id) => {
@@ -53,10 +54,31 @@ export const saveStudent = async (v, id) => {
       .select("id, student_id, roll_number, division_id")
       .eq("center_id", center_id);
     if (fErr) return { error: "Unable to save student. Please try again." };
+
+    // Auto-derive sequential student number if not explicitly specified
+    let studentId = (v.studentId || v.studentNo ? String(v.studentId || v.studentNo).trim() : "");
+    if (!id) {
+      if (!studentId || (existing ?? []).some((s) => same(s.student_id, studentId))) {
+        let maxNum = 0;
+        for (const s of existing ?? []) {
+          const num = parseInt(s.student_id, 10);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        }
+        let candidateNum = Math.max(maxNum + 1, (existing ?? []).length + 1);
+        while ((existing ?? []).some((s) => same(s.student_id, String(candidateNum)))) {
+          candidateNum++;
+        }
+        studentId = String(candidateNum);
+      }
+    } else if (id && !studentId) {
+      const cur = (existing ?? []).find((s) => s.id === id);
+      studentId = cur?.student_id || "1";
+    }
+
     const e = {};
-    if (!v.studentId?.trim()) e.studentId = "Student ID is required.";
-    else if ((existing ?? []).some((s) => s.id !== id && same(s.student_id, v.studentId)))
-      e.studentId = "This Student ID is already used.";
+    if (!studentId) e.studentId = "Student number is required.";
+    else if ((existing ?? []).some((s) => s.id !== id && same(s.student_id, studentId)))
+      e.studentId = "This student number is already used.";
     if (!v.name?.trim()) e.name = "Student name is required.";
     if (!/^\d+$/.test(String(v.rollNumber ?? "").trim())) e.rollNumber = "Roll number must be a number.";
     if (!v.divisionId) e.divisionId = "Division is required.";
@@ -74,7 +96,7 @@ export const saveStudent = async (v, id) => {
       if (dErr || !div) return { errors: { divisionId: "Division is required." } };
     }
     const row = {
-      student_id: v.studentId.trim(),
+      student_id: String(studentId).trim(),
       name: v.name.trim(),
       roll_number: Number(v.rollNumber),
       division_id: v.divisionId,
@@ -101,7 +123,12 @@ export const saveStudent = async (v, id) => {
         const retry = await supabase.from("students").update(rowWithoutMobile).eq("id", id).eq("center_id", center_id);
         error = retry.error;
       }
-      if (error) return { error: "Unable to save student. Please try again." };
+      if (error) {
+        if (error.code === "23505") {
+          return { error: "A student with this number or roll number already exists." };
+        }
+        return { error: error.message || "Unable to save student. Please try again." };
+      }
     } else {
       let { error } = await supabase.from("students").insert({ center_id, ...row });
       if (isMobileMissing(error)) {
@@ -109,7 +136,12 @@ export const saveStudent = async (v, id) => {
         const retry = await supabase.from("students").insert({ center_id, ...rowWithoutMobile });
         error = retry.error;
       }
-      if (error) return { error: "Unable to create student. Please try again." };
+      if (error) {
+        if (error.code === "23505") {
+          return { error: "A student with this number already exists in this center." };
+        }
+        return { error: error.message || "Unable to create student. Please try again." };
+      }
     }
     return { data: true };
   } catch (err) {

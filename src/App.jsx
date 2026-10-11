@@ -35,6 +35,7 @@ export default function App() {
       <Route path="/divisions" element={<Portal><Divisions /></Portal>} />
       <Route path="/students" element={<Portal><Students /></Portal>} />
       <Route path="/attendance" element={<Portal><Attendance /></Portal>} />
+      <Route path="/daily-attendance" element={<Portal><Attendance /></Portal>} />
       <Route path="/reports" element={<Portal><Reports /></Portal>} />
       <Route path="/settings" element={<Portal><Settings /></Portal>} />
 

@@ -7,9 +7,10 @@ const STATUS = [{ value: "active", label: "Active" }, { value: "inactive", label
 
 // Office pattern: StudentModal supports rapid entry — stays open after create,
 // clears the form, and refocuses the roll input via rollRef.
-export default function StudentForm({ initial, divisions, onSave, onCancel, rollRef }) {
+export default function StudentForm({ initial, nextNumber = 1, divisions, onSave, onCancel, rollRef }) {
   const [v, setV] = useState({
-    studentId: initial?.studentId ?? "",
+    studentId: initial?.studentId ?? String(nextNumber),
+    studentNo: initial?.studentNo ?? initial?.studentId ?? String(nextNumber),
     name: initial?.name ?? "",
     rollNumber: initial ? String(initial.rollNumber) : "",
     divisionId: initial?.divisionId ?? "",
@@ -27,14 +28,57 @@ export default function StudentForm({ initial, divisions, onSave, onCancel, roll
   return (
     <form noValidate onSubmit={submit} className="form">
       <div className="form-grid">
-        <Input id="stu-id" label="Student ID" placeholder="STU001" value={v.studentId} onChange={set("studentId")} error={errors.studentId} autoFocus />
-        <Input id="stu-roll" label="Roll Number" inputMode="numeric" placeholder="1" value={v.rollNumber} onChange={set("rollNumber")} error={errors.rollNumber} ref={rollRef} />
-        <Input id="stu-name" className="span-2" label="Student Name" placeholder="John Smith" value={v.name} onChange={set("name")} error={errors.name} />
-        <Input id="stu-mobile" label="Mobile Number" type="tel" placeholder="+91 98765 43210" value={v.mobile} onChange={set("mobile")} error={errors.mobile} />
-        <Select id="stu-div" label="Division" placeholder="Select division" options={divisions.map((d) => ({ value: d.id, label: d.name }))} value={v.divisionId} onChange={set("divisionId")} error={errors.divisionId} />
-        <Select id="stu-status" className="span-2" label="Status" options={STATUS} value={v.status} onChange={set("status")} />
+        <Input
+          id="stu-no"
+          label="Student No."
+          value={`#${v.studentNo}`}
+          disabled
+          readOnly
+          title="Sequential student number"
+        />
+        <Input
+          id="stu-roll"
+          label="Roll Number"
+          inputMode="numeric"
+          placeholder="1"
+          value={v.rollNumber}
+          onChange={set("rollNumber")}
+          error={errors.rollNumber}
+          ref={rollRef}
+        />
+        <Input
+          id="stu-name"
+          className="span-2"
+          label="Student Name"
+          placeholder="John Smith"
+          value={v.name}
+          onChange={set("name")}
+          error={errors.name}
+          autoFocus
+        />
+        <Select
+          id="stu-div"
+          label="Division"
+          placeholder="Select division"
+          options={divisions.map((d) => ({ value: d.id, label: d.name }))}
+          value={v.divisionId}
+          onChange={set("divisionId")}
+          error={errors.divisionId}
+        />
+        <Input
+          id="stu-mobile"
+          label="Mobile Number"
+          type="tel"
+          placeholder="+91 98765 43210"
+          value={v.mobile}
+          onChange={set("mobile")}
+          error={errors.mobile}
+        />
       </div>
-      <div className="modal-actions"><Button variant="secondary" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving..." : initial ? "Save Changes" : "Create Student"}</Button></div>
+      <div className="modal-actions">
+        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" disabled={saving}>{saving ? "Saving..." : initial ? "Save Changes" : "Create Student"}</Button>
+      </div>
     </form>
   );
 }

@@ -31,6 +31,12 @@ const friendlyAuthError = (error, fallback) => {
     return "Supabase could not send the confirmation email through the configured mail server. Check Supabase Auth → SMTP settings (host, port, username, Resend API key as password, verified sender) and try again.";
   if (code === "email_address_invalid" || msg.includes('email address "') || (msg.includes("email address") && msg.includes("is invalid")))
     return "Supabase rejected this email address. Check Auth → Settings in your Supabase dashboard: allowed email domains / disposable-email blocking may be enabled. Try a different email or update those settings.";
+  if (msg.includes("provider is not enabled") || msg.includes("unsupported provider") || msg.includes("oauth provider"))
+    return "Google sign-in is not enabled in your Supabase project. Please enable Google under Authentication → Providers in your Supabase dashboard.";
+  if (msg.includes("access_denied") || msg.includes("cancelled") || msg.includes("canceled"))
+    return "Google sign-in was cancelled. Please try again.";
+  if (msg.includes("redirect_uri_mismatch") || msg.includes("redirect uri mismatch"))
+    return "Redirect URL mismatch. Add your Supabase callback URL to your Google Cloud OAuth Client credentials.";
   // Last resort: include the real reason (dev) so failures are debuggable.
   const detail = (error.message || "").trim();
   return detail && import.meta.env.DEV ? `${fb} (${detail})` : fb;
@@ -67,6 +73,24 @@ export const loginUser = async ({ email, password }) => {
     return { error: friendlyAuthError(e), raw: e };
   }
 };
+
+// Initiates Google OAuth redirect to /auth/callback
+export const signInWithGoogle = async () => {
+  if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) return { error: friendlyAuthError(error, "Unable to sign in with Google. Please try again."), raw: error };
+    return { data };
+  } catch (e) {
+    return { error: friendlyAuthError(e, "Unable to sign in with Google. Please try again."), raw: e };
+  }
+};
+
 
 export const logoutUser = async () => {
   const { error } = await supabase.auth.signOut();

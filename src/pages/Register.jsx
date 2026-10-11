@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Input from "../components/common/Input.jsx";
 import Button from "../components/common/Button.jsx";
-import { registerUser } from "../services/authService.js";
+import Icon from "../components/common/Icon.jsx";
+import { registerUser, signInWithGoogle } from "../services/authService.js";
 import { isSupabaseConfigured } from "../lib/supabase.js";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
@@ -14,11 +15,22 @@ export default function Register() {
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const set = (k) => (e) => {
     setValues({ ...values, [k]: e.target.value });
     setErrors({ ...errors, [k]: undefined });
     setFormError("");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setFormError("");
+    setGoogleLoading(true);
+    const r = await signInWithGoogle();
+    if (r?.error) {
+      setGoogleLoading(false);
+      setFormError(r.error);
+    }
   };
 
   const validate = () => {
@@ -54,7 +66,7 @@ export default function Register() {
       <div className="auth-card">
         <div className="auth-brand"><span className="auth-logo">CP</span><div><small>CENTER</small><b>Center Portal</b></div></div>
         <h2>Create your account</h2>
-        <p className="muted">Register with your email to get started. You will set up your center after signing in.</p>
+        <p className="muted">Register with Google or your email to get started. You will set up your center after signing in.</p>
         {!isSupabaseConfigured && (
           <p className="form-error" role="alert">
             Supabase is not configured. Create a <code>.env</code> file with{" "}
@@ -67,13 +79,27 @@ export default function Register() {
             <Button onClick={() => navigate("/login")}>Go to Login</Button>
           </div>
         ) : (
-          <form noValidate onSubmit={submit} className="auth-form">
-            <Input id="r-email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" value={values.email} onChange={set("email")} error={errors.email} />
-            <Input id="r-pass" label="Password" type="password" autoComplete="new-password" placeholder="Minimum 8 characters" value={values.password} onChange={set("password")} error={errors.password} />
-            <Input id="r-confirm" label="Confirm Password" type="password" autoComplete="new-password" placeholder="Repeat your password" value={values.confirm} onChange={set("confirm")} error={errors.confirm} />
-            {formError && <p className="form-error" role="alert">{formError}</p>}
-            <Button type="submit" disabled={submitting} className="btn--block">{submitting ? "Creating account…" : "Create Account"}</Button>
-          </form>
+          <>
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={submitting || googleLoading}
+              className="btn btn--google btn--block"
+            >
+              <Icon name="google" size={18} />
+              {googleLoading ? "Connecting to Google…" : "Continue with Google"}
+            </button>
+
+            <div className="auth-divider"><span>or</span></div>
+
+            <form noValidate onSubmit={submit} className="auth-form">
+              <Input id="r-email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" value={values.email} onChange={set("email")} error={errors.email} />
+              <Input id="r-pass" label="Password" type="password" autoComplete="new-password" placeholder="Minimum 8 characters" value={values.password} onChange={set("password")} error={errors.password} />
+              <Input id="r-confirm" label="Confirm Password" type="password" autoComplete="new-password" placeholder="Repeat your password" value={values.confirm} onChange={set("confirm")} error={errors.confirm} />
+              {formError && <p className="form-error" role="alert">{formError}</p>}
+              <Button type="submit" disabled={submitting || googleLoading} className="btn--block">{submitting ? "Creating account…" : "Create Account"}</Button>
+            </form>
+          </>
         )}
         <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
       </div>

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Input from "../components/common/Input.jsx";
 import Button from "../components/common/Button.jsx";
-import { loginUser, resolvePostLoginDestination } from "../services/authService.js";
+import Icon from "../components/common/Icon.jsx";
+import { loginUser, resolvePostLoginDestination, signInWithGoogle } from "../services/authService.js";
 import { isSupabaseConfigured } from "../lib/supabase.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -15,11 +16,22 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const set = (k) => (e) => {
     setValues({ ...values, [k]: e.target.value });
     setErrors({ ...errors, [k]: undefined });
     setFormError("");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setFormError("");
+    setGoogleLoading(true);
+    const r = await signInWithGoogle();
+    if (r?.error) {
+      setGoogleLoading(false);
+      setFormError(r.error);
+    }
   };
 
   const submit = async (ev) => {
@@ -58,12 +70,25 @@ export default function Login() {
             <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> (or <code>VITE_SUPABASE_ANON_KEY</code>), then restart the dev server.
           </p>
         )}
+
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={submitting || googleLoading}
+          className="btn btn--google btn--block"
+        >
+          <Icon name="google" size={18} />
+          {googleLoading ? "Connecting to Google…" : "Continue with Google"}
+        </button>
+
+        <div className="auth-divider"><span>or</span></div>
+
         <form noValidate onSubmit={submit} className="auth-form">
           <Input id="l-email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" value={values.email} onChange={set("email")} error={errors.email} />
           <Input id="l-pass" label="Password" type="password" autoComplete="current-password" placeholder="Your password" value={values.password} onChange={set("password")} error={errors.password} />
           <div className="auth-row"><span /><Link to="/forgot-password">Forgot Password?</Link></div>
           {formError && <p className="form-error" role="alert">{formError}</p>}
-          <Button type="submit" disabled={submitting} className="btn--block">{submitting ? "Signing in…" : "Sign In"}</Button>
+          <Button type="submit" disabled={submitting || googleLoading} className="btn--block">{submitting ? "Signing in…" : "Sign In"}</Button>
         </form>
         <p className="auth-switch">Don&apos;t have an account? <Link to="/register">Create one</Link></p>
       </div>

@@ -4,7 +4,8 @@ import Icon from "../common/Icon.jsx";
 
 const NAV_ITEMS = [
   { to: "/portal", label: "Dashboard", icon: "dashboard", end: true },
-  { to: "/attendance", label: "Daily Wise Attendance", icon: "daily" },
+  { to: "/attendance", label: "Attendance", icon: "attendance" },
+  { to: "/daily-attendance", label: "Daily Wise Attendance", icon: "daily" },
   { to: "/reports", label: "History", icon: "history" },
 ];
 

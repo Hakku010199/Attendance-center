@@ -43,12 +43,14 @@ const ensureSession = async (center_id, division_id, date) => {
 
 export const getAttendance = async (date, divisionId) => {
   const center_id = await requireCenterId();
-  const { data: students, error: sErr } = await supabase
+  let studentsQuery = supabase
     .from("students")
     .select("*")
-    .eq("center_id", center_id)
-    .eq("division_id", divisionId)
-    .eq("status", "active")
+    .eq("center_id", center_id);
+  if (divisionId && divisionId !== "all") {
+    studentsQuery = studentsQuery.eq("division_id", divisionId);
+  }
+  const { data: students, error: sErr } = await studentsQuery
     .order("roll_number", { ascending: true });
   if (sErr) throw new Error("Unable to load attendance. Please try again.");
   const rows = (students ?? []).map((s) => ({
@@ -60,21 +62,141 @@ export const getAttendance = async (date, divisionId) => {
     status: s.status,
     mobile: s.mobile || s.phone || "",
   }));
-  const { data: session } = await supabase
-    .from("attendance_sessions")
-    .select("id")
-    .eq("center_id", center_id)
-    .eq("division_id", divisionId)
-    .eq("attendance_date", date)
-    .maybeSingle();
-  if (!session) return { students: rows, absentIds: [] };
-  const { data: records, error: rErr } = await supabase
-    .from("attendance_records")
-    .select("student_id, status")
-    .eq("center_id", center_id)
-    .eq("session_id", session.id);
-  if (rErr) throw new Error("Unable to load attendance. Please try again.");
-  return { students: rows, absentIds: (records ?? []).filter((r) => r.status === "absent").map((r) => r.student_id) };
+
+  // 1. Check public.attendance table first
+  let absentIds = [];
+  let foundInTable = false;
+  try {
+    let attQuery = supabase
+      .from("attendance")
+      .select("student_id, status")
+      .eq("center_id", center_id)
+      .eq("date", date);
+    if (divisionId && divisionId !== "all") {
+      attQuery = attQuery.eq("division_id", divisionId);
+    }
+    const { data: attData, error: attErr } = await attQuery;
+    if (!attErr && attData && attData.length > 0) {
+      foundInTable = true;
+      absentIds = attData.filter((r) => r.status === "absent").map((r) => r.student_id);
+    }
+  } catch {
+    // continue to fallback
+  }
+
+  // 2. Fallback to attendance_sessions + attendance_records
+  let hasSession = false;
+  if (!foundInTable && divisionId && divisionId !== "all") {
+    const { data: session } = await supabase
+      .from("attendance_sessions")
+      .select("id")
+      .eq("center_id", center_id)
+      .eq("division_id", divisionId)
+      .eq("attendance_date", date)
+      .maybeSingle();
+    if (session) {
+      hasSession = true;
+      const { data: records, error: rErr } = await supabase
+        .from("attendance_records")
+        .select("student_id, status")
+        .eq("center_id", center_id)
+        .eq("session_id", session.id);
+      if (!rErr && records) {
+        absentIds = records.filter((r) => r.status === "absent").map((r) => r.student_id);
+      }
+    }
+  }
+
+  return { students: rows, absentIds, hasSubmitted: foundInTable || hasSession };
+};
+
+export const fetchDivisionStudentCounts = async () => {
+  try {
+    const center_id = await requireCenterId();
+    const { data: students } = await supabase
+      .from("students")
+      .select("id, division_id")
+      .eq("center_id", center_id);
+    const counts = {};
+    for (const s of students ?? []) {
+      if (s.division_id) {
+        counts[s.division_id] = (counts[s.division_id] ?? 0) + 1;
+      }
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+};
+
+export const submitAttendance = async ({ date, divisionId, roster, absentMap }) => {
+  try {
+    const center_id = await requireCenterId();
+    const { data: auth } = await supabase.auth.getUser();
+    const user_id = auth?.user?.id || null;
+
+    if (!roster || roster.length === 0) {
+      return { error: "No students in this division to submit." };
+    }
+
+    const records = roster.map((s) => ({
+      center_id,
+      division_id: s.divisionId || divisionId,
+      student_id: s.id,
+      date,
+      status: absentMap[s.id] ? "absent" : "present",
+      submitted_by: user_id,
+      updated_at: new Date().toISOString(),
+    }));
+
+    // 1. Primary write to public.attendance table
+    try {
+      const { error: attErr } = await supabase
+        .from("attendance")
+        .upsert(records, { onConflict: "student_id,date" });
+      if (attErr) {
+        await supabase.from("attendance").upsert(records);
+      }
+    } catch (e) {
+      console.warn("[attendance] error upserting to attendance table:", e);
+    }
+
+    // 2. Also sync to attendance_sessions + attendance_records for backwards compatibility
+    try {
+      if (divisionId && divisionId !== "all") {
+        const session_id = await ensureSession(center_id, divisionId, date);
+        const absentList = roster.filter((s) => absentMap[s.id]);
+        const presentList = roster.filter((s) => !absentMap[s.id]);
+
+        if (absentList.length > 0) {
+          await supabase.from("attendance_records").upsert(
+            absentList.map((s) => ({
+              center_id,
+              session_id,
+              student_id: s.id,
+              status: "absent",
+            })),
+            { onConflict: "session_id,student_id" }
+          );
+        }
+        if (presentList.length > 0) {
+          await supabase
+            .from("attendance_records")
+            .delete()
+            .eq("center_id", center_id)
+            .eq("session_id", session_id)
+            .in("student_id", presentList.map((s) => s.id));
+        }
+      }
+    } catch (e) {
+      console.warn("[attendance] error syncing sessions:", e);
+    }
+
+    notifyAttendanceUpdated();
+    return { data: true };
+  } catch (e) {
+    return { error: e?.message || "Unable to save attendance. Please try again." };
+  }
 };
 
 export const setAbsent = async (date, divisionId, studentId, isAbsent) => {
@@ -96,6 +218,29 @@ export const setAbsent = async (date, divisionId, studentId, isAbsent) => {
         .eq("student_id", studentId);
       if (error) return { error: "Unable to save attendance. Please try again." };
     }
+
+    // Also sync to public.attendance table
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const attRecord = {
+        center_id,
+        division_id: divisionId,
+        student_id: studentId,
+        date,
+        status: isAbsent ? "absent" : "present",
+        submitted_by: auth?.user?.id || null,
+        updated_at: new Date().toISOString(),
+      };
+      const { error: attErr } = await supabase
+        .from("attendance")
+        .upsert(attRecord, { onConflict: "student_id,date" });
+      if (attErr) {
+        await supabase.from("attendance").upsert(attRecord);
+      }
+    } catch (e) {
+      console.warn("[attendance] error syncing to attendance table in setAbsent:", e);
+    }
+
     notifyAttendanceUpdated();
     return { data: true };
   } catch (e) {
@@ -179,8 +324,69 @@ export const getReport = async () => {
 
 // Office pattern: searchable audit log across all dates for this center.
 // Orders by attendance_date DESC, groups by date, sorts each group by roll.
-export const getHistory = async ({ date, divisionId, search } = {}) => {
+export const getHistory = async ({ date, divisionId, status, search } = {}) => {
   const center_id = await requireCenterId();
+
+  const { data: students, error: stErr } = await supabase
+    .from("students")
+    .select("*")
+    .eq("center_id", center_id);
+  if (stErr) throw new Error("Unable to load attendance history. Please try again.");
+  const byStudent = Object.fromEntries((students ?? []).map((s) => [s.id, s]));
+  const term = String(search ?? "").trim().toLowerCase();
+
+  // 1. Try public.attendance table first
+  let attRecords = [];
+  let foundInAttendance = false;
+  try {
+    let attQuery = supabase
+      .from("attendance")
+      .select("id, student_id, division_id, date, status")
+      .eq("center_id", center_id)
+      .order("date", { ascending: false });
+    if (date) attQuery = attQuery.eq("date", date);
+    if (divisionId && divisionId !== "all") attQuery = attQuery.eq("division_id", divisionId);
+    if (status && status !== "all") attQuery = attQuery.eq("status", status);
+
+    const { data: attData, error: attErr } = await attQuery;
+    if (!attErr && attData && attData.length > 0) {
+      foundInAttendance = true;
+      attRecords = attData;
+    }
+  } catch (e) {
+    console.warn("[history] attendance table query:", e);
+  }
+
+  const out = [];
+
+  if (foundInAttendance) {
+    for (const r of attRecords) {
+      const st = byStudent[r.student_id];
+      if (!st) continue;
+      if (
+        term &&
+        !st.name.toLowerCase().includes(term) &&
+        !String(st.student_id).toLowerCase().includes(term) &&
+        !String(st.roll_number ?? "").toLowerCase().includes(term) &&
+        !String(st.mobile || "").toLowerCase().includes(term)
+      )
+        continue;
+      out.push({
+        sessionId: r.id,
+        date: r.date ?? "",
+        divisionId: r.division_id ?? st.division_id,
+        rollNumber: st.roll_number,
+        studentId: st.student_id,
+        name: st.name,
+        mobile: st.mobile || st.phone || "",
+        status: r.status,
+      });
+    }
+    out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : Number(a.rollNumber) - Number(b.rollNumber)));
+    return out;
+  }
+
+  // 2. Fallback to attendance_sessions + attendance_records
   let sessionQuery = supabase
     .from("attendance_sessions")
     .select("id, attendance_date, division_id")
@@ -192,24 +398,29 @@ export const getHistory = async ({ date, divisionId, search } = {}) => {
   if (sErr) throw new Error("Unable to load attendance history. Please try again.");
   if ((sessions ?? []).length === 0) return [];
   const sessionIds = sessions.map((s) => s.id);
-  const { data: records, error: rErr } = await supabase
+
+  let recordQuery = supabase
     .from("attendance_records")
     .select("session_id, student_id, status")
     .eq("center_id", center_id)
     .in("session_id", sessionIds);
+  if (status && status !== "all") {
+    recordQuery = recordQuery.eq("status", status);
+  }
+  const { data: records, error: rErr } = await recordQuery;
   if (rErr) throw new Error("Unable to load attendance history. Please try again.");
-  const { data: students, error: stErr } = await supabase
-    .from("students")
-    .select("id, student_id, name, roll_number, division_id")
-    .eq("center_id", center_id);
-  if (stErr) throw new Error("Unable to load attendance history. Please try again.");
-  const byStudent = Object.fromEntries((students ?? []).map((s) => [s.id, s]));
-  const term = String(search ?? "").trim().toLowerCase();
-  const out = [];
+
   for (const r of records ?? []) {
     const st = byStudent[r.student_id];
     if (!st) continue;
-    if (term && !st.name.toLowerCase().includes(term) && !String(st.student_id).toLowerCase().includes(term)) continue;
+    if (
+      term &&
+      !st.name.toLowerCase().includes(term) &&
+      !String(st.student_id).toLowerCase().includes(term) &&
+      !String(st.roll_number ?? "").toLowerCase().includes(term) &&
+      !String(st.mobile || "").toLowerCase().includes(term)
+    )
+      continue;
     const sess = sessions.find((s) => s.id === r.session_id);
     out.push({
       sessionId: r.session_id,
@@ -218,6 +429,7 @@ export const getHistory = async ({ date, divisionId, search } = {}) => {
       rollNumber: st.roll_number,
       studentId: st.student_id,
       name: st.name,
+      mobile: st.mobile || st.phone || "",
       status: r.status,
     });
   }

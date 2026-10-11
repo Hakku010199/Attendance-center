@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PageHeader from "../components/common/PageHeader.jsx";
 import Button from "../components/common/Button.jsx";
 import Input from "../components/common/Input.jsx";
 import { useToast } from "../components/common/Toast.jsx";
@@ -38,9 +37,9 @@ export default function Settings() {
 
   return (
     <>
-      <PageHeader title="Settings" text="Manage your center and account.">
+      <div className="page-actions" style={{ justifyContent: "flex-end", marginBottom: "16px" }}>
         <Button variant="secondary" onClick={logout}>Sign Out</Button>
-      </PageHeader>
+      </div>
       <form noValidate onSubmit={save} className="card form"><h3>Center Information</h3>
         <div className="form-grid">
           <Input id="c-name" label="Center Name" value={v.name} onChange={set("name")} error={errors.name} />

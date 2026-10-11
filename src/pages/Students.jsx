@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import PageHeader from "../components/common/PageHeader.jsx";
 import Button from "../components/common/Button.jsx";
 import Icon from "../components/common/Icon.jsx";
 import Modal, { ConfirmDialog } from "../components/common/Modal.jsx";
@@ -23,14 +22,33 @@ const activeDivisions = (divisions) => divisions.filter((d) => d.status === "act
 // Office pattern: master-data entry with debounced search,
 // auto-correcting division filter, and rapid-entry create.
 export default function Students() {
-  const { divisionsKey } = usePortal();
+  const { center, divisionsKey } = usePortal();
   const toast = useToast();
   const { divisions, loading: divLoading, error: divError } = useDivisions();
   const state = useLoad(listStudents, [divisionsKey]);
+  const centerId = center?.id;
+  const divStorageKey = centerId ? `students-filter-division:${centerId}` : null;
+
+  const [division, setDivision] = useState(() => {
+    if (centerId) {
+      try {
+        const saved = localStorage.getItem(`students-filter-division:${centerId}`);
+        if (saved) return saved;
+      } catch {}
+    }
+    return "all";
+  });
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [division, setDivision] = useState("all");
-  const [status, setStatus] = useState("all");
+
+  const handleDivisionChange = (newDiv) => {
+    setDivision(newDiv);
+    if (divStorageKey) {
+      try {
+        localStorage.setItem(divStorageKey, newDiv);
+      } catch {}
+    }
+  };
   const [form, setForm] = useState(null);
   const [formKey, setFormKey] = useState(0);
   const [importOpen, setImportOpen] = useState(false);
@@ -78,33 +96,128 @@ export default function Students() {
 
   return (
     <>
-      <PageHeader title="Students" text="Manage all students in your center."><><Button variant="secondary" onClick={() => setSmartImportOpen(true)}><Icon name="download" size={16} /> Import Students</Button><Button onClick={() => setForm({ student: null })}><Icon name="plus" size={16} /> Add Student</Button></></PageHeader>
-      {divError && <div className="notice" role="alert">{divError}</div>}
       <Async state={state}>{(students) => {
         const term = debouncedQ.trim().toLowerCase();
         const count = students.length;
-        const rows = students.filter((s) => (division === "all" || s.divisionId === division) && (status === "all" || s.status === status) && (!term || s.name.toLowerCase().includes(term) || s.studentId.toLowerCase().includes(term)));
+        const maxStudentNo = students.reduce((max, s) => {
+          const n = parseInt(s.studentNo, 10);
+          return !isNaN(n) && n > max ? n : max;
+        }, 0);
+        const nextNumber = Math.max(maxStudentNo + 1, count + 1);
+
+        const rows = students.filter((s) => {
+          const matchDiv = division === "all" || s.divisionId === division;
+          const matchTerm =
+            !term ||
+            s.name.toLowerCase().includes(term) ||
+            String(s.rollNumber).includes(term) ||
+            (s.mobile && s.mobile.toLowerCase().includes(term)) ||
+            String(s.studentNo || "").includes(term);
+          return matchDiv && matchTerm;
+        });
+
         return (
           <>
-            <div className="toolbar toolbar--3">
-              <div className="search"><Icon name="search" size={16} /><input className="control" type="search" placeholder="Search by name or student ID" aria-label="Search students" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-              <Select id="stu-f-div" aria-label="Division filter" options={[{ value: "all", label: "All Divisions" }, ...divisions.map((d) => ({ value: d.id, label: d.name }))]} value={division} onChange={(e) => setDivision(e.target.value)} />
-              <Select id="stu-f-status" aria-label="Status filter" options={STATUS} value={status} onChange={(e) => setStatus(e.target.value)} />
+            <div className="page-actions" style={{ justifyContent: "flex-end", marginBottom: "16px" }}>
+              <Button variant="secondary" onClick={() => setSmartImportOpen(true)}>
+                <Icon name="download" size={16} /> Import Students
+              </Button>
+              <Button onClick={() => setForm({ student: null, nextNumber })}>
+                <Icon name="plus" size={16} /> Add Student
+              </Button>
+            </div>
+            {divError && <div className="notice" role="alert">{divError}</div>}
+            <div className="toolbar">
+              <div className="search">
+                <Icon name="search" size={16} />
+                <input
+                  className="control"
+                  type="search"
+                  placeholder="Search by name, roll, or mobile"
+                  aria-label="Search students"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
+              <Select
+                id="stu-f-div"
+                aria-label="Division filter"
+                options={[{ value: "all", label: "All Divisions" }, ...divisions.map((d) => ({ value: d.id, label: d.name }))]}
+                value={division}
+                onChange={(e) => handleDivisionChange(e.target.value)}
+              />
             </div>
             <section className="card card--flush">
-              {rows.length === 0 ? <EmptyState title={count === 0 ? "No students yet" : "No students found"} text={count === 0 ? "Add your first student to get started." : "Try a different search or filter."} action={count === 0 ? <Button onClick={() => setForm({ student: null })}><Icon name="plus" size={16} /> Add Student</Button> : undefined} /> : (
-                <div className="table-wrap"><table className="table">
-                  <thead><tr><th>Student ID</th><th>Student Name</th><th>Roll Number</th><th>Division</th><th>Status</th><th className="th-right">Actions</th></tr></thead>
-                  <tbody>{rows.map((s) => (
-                    <tr key={s.id}>
-                      <td data-label="Student ID">{s.studentId}</td><td data-label="Name"><strong>{s.name}</strong></td><td data-label="Roll No">{s.rollNumber}</td><td data-label="Division">{s.divisionName}</td>
-                      <td data-label="Status"><StatusBadge variant={s.status}>{s.status === "active" ? "Active" : "Inactive"}</StatusBadge></td>
-                      <td className="cell-actions"><Button variant="ghost" size="sm" onClick={() => setForm({ student: s })}><Icon name="edit" size={15} /> Edit</Button><Button variant="ghost-danger" size="sm" onClick={() => setDel(s)}><Icon name="trash" size={15} /> Delete</Button></td>
-                    </tr>))}</tbody>
-                </table></div>
+              {rows.length === 0 ? (
+                <EmptyState
+                  title={count === 0 ? "No students yet" : "No students found"}
+                  text={count === 0 ? "Add your first student to get started." : "Try a different search or filter."}
+                  action={count === 0 ? <Button onClick={() => setForm({ student: null, nextNumber })}><Icon name="plus" size={16} /> Add Student</Button> : undefined}
+                />
+              ) : (
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 60 }}>No.</th>
+                        <th>Student Name</th>
+                        <th>Roll Number</th>
+                        <th>Division</th>
+                        <th>Mobile</th>
+                        <th className="th-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((s, idx) => (
+                        <tr key={s.id}>
+                          <td data-label="No." className="muted" style={{ fontWeight: 600 }}>
+                            {s.studentNo || idx + 1}
+                          </td>
+                          <td data-label="Name"><strong>{s.name}</strong></td>
+                          <td data-label="Roll No">{s.rollNumber}</td>
+                          <td data-label="Division">{s.divisionName}</td>
+                          <td data-label="Mobile">
+                            {s.mobile ? (
+                              <a
+                                href={`tel:${s.mobile}`}
+                                className="phone-call-link"
+                                title={`Call ${s.name} (${s.mobile})`}
+                              >
+                                <span className="phone-call-icon"><Icon name="phone" size={12} /></span>
+                                <span className="phone-call-text">{s.mobile}</span>
+                              </a>
+                            ) : (
+                              <span className="muted">—</span>
+                            )}
+                          </td>
+                          <td className="cell-actions">
+                            <Button variant="ghost" size="sm" onClick={() => setForm({ student: s, nextNumber: s.studentNo || idx + 1 })}>
+                              <Icon name="edit" size={15} /> Edit
+                            </Button>
+                            <Button variant="ghost-danger" size="sm" onClick={() => setDel(s)}>
+                              <Icon name="trash" size={15} /> Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </section>
-            {form && <Modal title={form.student ? "Edit Student" : "Add Student"} onClose={() => setForm(null)}><StudentForm key={formKey} initial={form.student} divisions={divisions} onSave={save} onCancel={() => setForm(null)} rollRef={rollRef} /></Modal>}
+            {form && (
+              <Modal title={form.student ? "Edit Student" : "Add Student"} onClose={() => setForm(null)}>
+                <StudentForm
+                  key={formKey}
+                  initial={form.student}
+                  nextNumber={form.nextNumber || nextNumber}
+                  divisions={divisions}
+                  onSave={save}
+                  onCancel={() => setForm(null)}
+                  rollRef={rollRef}
+                />
+              </Modal>
+            )}
             {smartImportOpen && (
               <StudentImportModal
                 divisions={activeDivisions(divisions)}

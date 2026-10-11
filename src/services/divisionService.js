@@ -68,7 +68,7 @@ export const saveDivision = async (v, id) => {
     if (fErr) return { error: "Unable to save division. Please try again." };
 
     if ((existing ?? []).some((d) => same(d.name, trimmedName))) {
-      return { errors: { name: "A division with this name already exists." } };
+      return { errors: { name: "A division with this name already exists in this center." } };
     }
 
     if (id) {
@@ -81,9 +81,9 @@ export const saveDivision = async (v, id) => {
       if (error) {
         const msg = String(error.message || "").toLowerCase();
         if (error.code === "23505" || msg.includes("duplicate") || msg.includes("unique")) {
-          return { errors: { name: "A division with this name already exists." } };
+          return { errors: { name: "A division with this name already exists in this center." } };
         }
-        return { error: "Unable to save division. Please try again." };
+        return { error: error.message || "Unable to save division. Please try again." };
       }
       if (!updated || updated.length === 0) {
         return { error: "Division not found or access denied." };
@@ -95,9 +95,9 @@ export const saveDivision = async (v, id) => {
       if (error) {
         const msg = String(error.message || "").toLowerCase();
         if (error.code === "23505" || msg.includes("duplicate") || msg.includes("unique")) {
-          return { errors: { name: "A division with this name already exists." } };
+          return { errors: { name: "A division with this name already exists in this center." } };
         }
-        return { error: "Unable to create division. Please try again." };
+        return { error: error.message || "Unable to create division. Please try again." };
       }
     }
     notifyDivisionsUpdated();

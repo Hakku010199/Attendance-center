@@ -1,0 +1,434 @@
+/* Attendance Dashboard Styles */
+.attendance-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.attendance-filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group--date {
+  width: 200px;
+}
+
+.filter-group--division {
+  min-width: 280px;
+  flex: 1;
+}
+
+.filter-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* 3-column Summary Cards */
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 680px) {
+  .attendance-summary {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .summary-card {
+    padding: 10px 8px;
+    border-radius: 10px;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .summary-card-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+
+  .summary-card-value {
+    font-size: 1.4rem;
+    line-height: 1.15;
+  }
+}
+
+@media (max-width: 380px) {
+  .attendance-summary {
+    gap: 6px;
+  }
+
+  .summary-card {
+    padding: 8px 4px;
+  }
+
+  .summary-card-label {
+    font-size: 0.62rem;
+  }
+
+  .summary-card-value {
+    font-size: 1.25rem;
+  }
+}
+
+.summary-card {
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--card, #20232d);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-1px);
+}
+
+.summary-card--neutral {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.summary-card--present {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34d399;
+}
+
+.summary-card--absent {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #f87171;
+}
+
+.summary-card-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.summary-card--present .summary-card-label {
+  color: #34d399;
+}
+
+.summary-card--absent .summary-card-label {
+  color: #f87171;
+}
+
+.summary-card-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-card--present .summary-card-value {
+  color: #34d399;
+}
+
+.summary-card--absent .summary-card-value {
+  color: #f87171;
+}
+
+/* Student Grid Container */
+.student-grid-wrapper {
+  background: var(--card, #20232d);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.student-grid-loading,
+.student-grid-empty {
+  padding: 48px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.student-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 1200px) {
+  .student-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .student-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .student-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .student-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .student-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+
+/* Student Square Button */
+.student-card {
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  user-select: none;
+  font-family: inherit;
+  outline: none;
+}
+
+.student-card:focus-visible {
+  outline: 2px solid var(--accent, #5b4bf0);
+  outline-offset: 2px;
+}
+
+.student-card--present {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #ecfdf5;
+}
+
+.student-card--present:hover {
+  background: rgba(52, 211, 153, 0.22);
+  border-color: #34d399;
+  transform: translateY(-1.5px);
+}
+
+.student-card--absent {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fef2f2;
+}
+
+.student-card--absent:hover {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: #f87171;
+  transform: translateY(-1.5px);
+}
+
+.student-card-roll {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.student-card--present .student-card-roll {
+  color: #34d399;
+}
+
+.student-card--absent .student-card-roll {
+  color: #f87171;
+}
+
+.student-card-name {
+  font-size: 0.72rem;
+  font-weight: 500;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 3px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.student-card-badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  opacity: 0.75;
+}
+
+/* 3-Column Action Bar */
+.attendance-action-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+
+@media (max-width: 580px) {
+  .attendance-action-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-action {
+  height: 44px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.btn-action--present {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.btn-action--present:hover:not(:disabled) {
+  background: #34d399;
+  color: #064e3b;
+}
+
+.btn-action--submit {
+  background: var(--accent, #5b4bf0);
+  color: #fff;
+  border-color: var(--accent, #5b4bf0);
+  box-shadow: 0 0 16px rgba(91, 75, 240, 0.35);
+  font-weight: 700;
+}
+
+.btn-action--submit:hover:not(:disabled) {
+  background: #4a3bdc;
+  box-shadow: 0 0 22px rgba(91, 75, 240, 0.55);
+}
+
+.btn-action--absent {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.btn-action--absent:hover:not(:disabled) {
+  background: #f87171;
+  color: #450a0a;
+}
+
+.btn-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Absentees List Panel */
+.absentees-panel {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.absentees-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.absentees-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f87171;
+}
+
+.absentees-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.absentee-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fef2f2;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.absentee-chip:hover {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: #34d399;
+  color: #34d399;
+  transform: scale(1.02);
+}
+
+.absentee-roll {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.absentee-name {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.absentee-action {
+  opacity: 0.6;
+  font-size: 0.8rem;
+}
+

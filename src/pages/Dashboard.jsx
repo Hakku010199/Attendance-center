@@ -1,4 +1,3 @@
-import PageHeader from "../components/common/PageHeader.jsx";
 import StatCard from "../components/common/StatCard.jsx";
 import Async from "../components/common/Async.jsx";
 import BarChart from "../components/dashboard/BarChart.jsx";
@@ -6,16 +5,16 @@ import { usePortal } from "../components/layout/AppLayout.jsx";
 import useLoad from "../hooks/useLoad.js";
 import { getOverview } from "../services/attendanceService.js";
 
-const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; };
-
 // Dashboard keeps its existing design. Center/user now come from the Supabase session.
 export default function Dashboard() {
-  const { center, user, attendanceRefreshKey, divisionsKey } = usePortal();
+  const { attendanceRefreshKey, divisionsKey } = usePortal();
   const state = useLoad(getOverview, [attendanceRefreshKey, divisionsKey]);
   const date = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   return (
     <>
-      <PageHeader title={`${greeting()}, ${user.name}`} text={`${center.name} - Here's what's happening at your center today.`}><span className="date-chip">{date}</span></PageHeader>
+      <div className="page-head" style={{ justifyContent: "flex-end", marginBottom: "16px" }}>
+        <span className="date-chip">{date}</span>
+      </div>
       <Async state={state}>{(o) => (
         <>
           <div className="stat-grid">
