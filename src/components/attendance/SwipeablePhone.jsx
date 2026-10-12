@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Icon from "../common/Icon.jsx";
 
 export default function SwipeablePhone({
   phone,
   studentName,
-  isCalled,
-  onToggleCalled,
+  isCalled = false,
+  loading = false,
+  onMarkCalled,
 }) {
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -15,10 +16,11 @@ export default function SwipeablePhone({
   const hasMovedRef = useRef(false);
   const isHorizontalRef = useRef(null);
   const SWIPE_THRESHOLD = 45;
-  const MAX_SWIPE = 85;
+  const MAX_SWIPE = 96;
 
-  // Touch handlers
+  // Touch handlers for mobile swipe left
   const handleTouchStart = (e) => {
+    if (isCalled || loading) return;
     const touch = e.touches[0];
     startXRef.current = touch.clientX;
     startYRef.current = touch.clientY;
@@ -29,23 +31,24 @@ export default function SwipeablePhone({
   };
 
   const handleTouchMove = (e) => {
+    if (isCalled || loading) return;
     const touch = e.touches[0];
     const dx = touch.clientX - startXRef.current;
     const dy = touch.clientY - startYRef.current;
 
-    // Detect direction on initial movement
+    // Detect direction on initial movement to prevent blocking vertical scrolling
     if (isHorizontalRef.current === null && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
       isHorizontalRef.current = Math.abs(dx) >= Math.abs(dy);
     }
 
-    // Only handle horizontal swipe to the right
+    // Only handle horizontal swipe to the LEFT (revealing action on the right)
     if (isHorizontalRef.current) {
-      if (dx > 0) {
+      if (dx < 0) {
         if (e.cancelable) e.preventDefault();
-        const clamped = Math.min(dx * 0.85, MAX_SWIPE);
+        const clamped = Math.max(dx * 0.85, -MAX_SWIPE);
         currentOffsetRef.current = clamped;
         setOffset(clamped);
-        if (clamped > 8) hasMovedRef.current = true;
+        if (Math.abs(clamped) > 8) hasMovedRef.current = true;
       } else {
         currentOffsetRef.current = 0;
         setOffset(0);
@@ -54,60 +57,28 @@ export default function SwipeablePhone({
   };
 
   const handleTouchEnd = () => {
+    if (isCalled || loading) {
+      setIsDragging(false);
+      setOffset(0);
+      return;
+    }
     setIsDragging(false);
-    if (currentOffsetRef.current >= SWIPE_THRESHOLD) {
+    if (Math.abs(currentOffsetRef.current) >= SWIPE_THRESHOLD) {
       if (navigator.vibrate) {
         try {
           navigator.vibrate(25);
         } catch {}
       }
-      onToggleCalled();
+      if (onMarkCalled) {
+        onMarkCalled();
+      }
     }
     setOffset(0);
     currentOffsetRef.current = 0;
-    // Keep hasMovedRef true briefly to suppress immediate click on tel link
+    // Suppress immediate link click if finger moved
     setTimeout(() => {
       hasMovedRef.current = false;
     }, 150);
-  };
-
-  // Mouse handlers for desktop drag
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return; // Left click only
-    startXRef.current = e.clientX;
-    currentOffsetRef.current = 0;
-    hasMovedRef.current = false;
-    setIsDragging(true);
-
-    const handleMouseMove = (moveEvent) => {
-      const dx = moveEvent.clientX - startXRef.current;
-      if (dx > 0) {
-        const clamped = Math.min(dx * 0.85, MAX_SWIPE);
-        currentOffsetRef.current = clamped;
-        setOffset(clamped);
-        if (clamped > 6) hasMovedRef.current = true;
-      } else {
-        currentOffsetRef.current = 0;
-        setOffset(0);
-      }
-    };
-
-    const handleMouseUp = () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      setIsDragging(false);
-      if (currentOffsetRef.current >= SWIPE_THRESHOLD) {
-        onToggleCalled();
-      }
-      setOffset(0);
-      currentOffsetRef.current = 0;
-      setTimeout(() => {
-        hasMovedRef.current = false;
-      }, 150);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
   };
 
   const handleLinkClick = (e) => {
@@ -121,81 +92,92 @@ export default function SwipeablePhone({
     return <span className="muted">—</span>;
   }
 
-  const reachedThreshold = offset >= SWIPE_THRESHOLD;
+  const reachedThreshold = Math.abs(offset) >= SWIPE_THRESHOLD;
 
   return (
     <div
-      className={`swipe-phone-container ${isCalled ? "is-called" : ""}`}
+      className={`swipe-phone-container ${isCalled ? "is-called" : ""} ${
+        loading ? "is-loading" : ""
+      }`}
       title={
         isCalled
-          ? `Called • Click or swipe right to toggle status`
-          : `Call ${studentName || "student"} • Swipe right to mark as called`
+          ? `${studentName || "Student"} marked as called (click to undo)`
+          : `Call ${studentName || "student"} • ${phone}`
       }
     >
-      {/* Background action track revealed during swipe */}
-      <div
-        className={`swipe-phone-track ${reachedThreshold ? "track-active" : ""}`}
-        aria-hidden="true"
-      >
-        <span className="swipe-phone-track-text">
-          <Icon name="check" size={13} />
-          <span>{isCalled ? "Unmark" : "Called"}</span>
-        </span>
-      </div>
+      {/* Background action track: ONLY rendered when actively swiping left */}
+      {!isCalled && isDragging && offset < -4 && (
+        <div
+          className={`swipe-phone-track swipe-phone-track--right ${
+            reachedThreshold ? "track-active" : ""
+          }`}
+          aria-hidden="true"
+        >
+          <span className="swipe-phone-track-text">
+            <Icon name="phone" size={13} />
+            <span>Mark called</span>
+          </span>
+        </div>
+      )}
 
-      {/* Foreground sliding card */}
+      {/* Foreground sliding card: completely opaque background */}
       <div
         className={`swipe-phone-pill ${isDragging ? "is-dragging" : ""} ${
           isCalled ? "pill-called" : ""
         }`}
         style={{
-          transform: `translateX(${offset}px)`,
+          transform: isCalled ? "none" : `translateX(${offset}px)`,
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
-        onMouseDown={handleMouseDown}
       >
         <a
-          href={`tel:${phone}`}
+          href={isCalled ? undefined : `tel:${phone}`}
           className="phone-call-link"
-          onClick={handleLinkClick}
+          onClick={(e) => {
+            if (isCalled) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!loading && onMarkCalled) onMarkCalled();
+              return;
+            }
+            handleLinkClick(e);
+          }}
+          title={isCalled ? "Marked as called (click to undo)" : `Call ${phone}`}
         >
           <span className="phone-call-icon">
-            <Icon name={isCalled ? "check" : "phone"} size={12} />
+            {loading ? (
+              <span className="spinner-xs" aria-hidden="true" />
+            ) : (
+              <Icon name={isCalled ? "check" : "phone"} size={12} />
+            )}
           </span>
           <span className="phone-call-text">{phone}</span>
         </a>
 
-        {/* Status Chip / Toggle trigger */}
-        {isCalled ? (
+        {/* When not called: Show desktop arrow (hidden on mobile). When called: Only left verification icon is kept. */}
+        {!isCalled && (
           <button
             type="button"
-            className="called-chip"
+            className="desktop-arrow-btn"
             onClick={(e) => {
               e.stopPropagation();
-              onToggleCalled();
+              if (!loading && onMarkCalled) onMarkCalled();
             }}
-            title="Marked as Called (click to undo)"
+            disabled={loading}
+            aria-label={`Mark ${studentName || "student"} as called`}
+            title="Mark student as called"
           >
-            <span>Called</span>
-            <Icon name="check" size={11} />
+            {loading ? (
+              <span className="spinner-xs" aria-hidden="true" />
+            ) : (
+              <span className="arrow-glyph" aria-hidden="true">→</span>
+            )}
           </button>
-        ) : (
-          <span
-            className="swipe-hint"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCalled();
-            }}
-            title="Click or swipe right to mark as called"
-          >
-            →
-          </span>
         )}
       </div>
     </div>
   );
 }
-

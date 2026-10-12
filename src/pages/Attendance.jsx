@@ -17,6 +17,11 @@ import {
 } from "../services/attendanceService.js";
 import { ATTENDANCE_UPDATED } from "../utils/events.js";
 import { useToast } from "../components/common/Toast.jsx";
+import {
+  getStudentCallStatus,
+  markStudentAsCalled,
+  unmarkStudentAsCalled,
+} from "../services/callService.js";
 
 // Import custom attendance dashboard components
 import AttendanceFilters from "../components/attendance/AttendanceFilters.jsx";
@@ -126,7 +131,7 @@ export default function Attendance() {
     return [];
   });
 
-  // Called status tracking for Daily Wise Attendance (persisted in localStorage)
+  // Persistent Called status tracking for Daily Wise Attendance (persisted in Supabase)
   const [calledMap, setCalledMap] = useState(() => {
     if (centerId && date) {
       try {
@@ -136,33 +141,59 @@ export default function Attendance() {
     }
     return {};
   });
+  const [callLoadingMap, setCallLoadingMap] = useState({});
 
+  // Load persistent call tracking records from Supabase
   useEffect(() => {
+    let isLive = true;
     if (centerId && date) {
-      try {
-        const raw = localStorage.getItem(`attendance-called:${centerId}:${date}`);
-        setCalledMap(raw ? JSON.parse(raw) : {});
-      } catch {
-        setCalledMap({});
+      getStudentCallStatus({ centerId, date }).then(({ data, error }) => {
+        if (isLive && data) {
+          setCalledMap(data);
+        }
+      });
+    }
+    return () => {
+      isLive = false;
+    };
+  }, [centerId, date, attendanceRefreshKey]);
+
+  // Shared function invoked by both mobile swipe and desktop arrow click
+  const handleMarkStudentCalled = async (studentId) => {
+    if (!centerId || !date || !studentId) return;
+    if (callLoadingMap[studentId]) return;
+
+    const isAlreadyCalled = Boolean(calledMap[studentId]);
+
+    // Prevent concurrent duplicate requests for this student
+    setCallLoadingMap((prev) => ({ ...prev, [studentId]: true }));
+
+    if (isAlreadyCalled) {
+      // Unmark called status
+      const res = await unmarkStudentAsCalled({ studentId, centerId, date });
+      setCallLoadingMap((prev) => ({ ...prev, [studentId]: false }));
+      if (res?.error) {
+        toast(res.error, "error");
+      } else {
+        setCalledMap((prev) => {
+          const next = { ...prev };
+          delete next[studentId];
+          return next;
+        });
+      }
+    } else {
+      // Mark as called
+      const res = await markStudentAsCalled({ studentId, centerId, date });
+      setCallLoadingMap((prev) => ({ ...prev, [studentId]: false }));
+      if (res?.error) {
+        toast(res.error, "error");
+      } else {
+        setCalledMap((prev) => ({
+          ...prev,
+          [studentId]: res.data || true,
+        }));
       }
     }
-  }, [centerId, date]);
-
-  const handleToggleCalled = (studentId) => {
-    setCalledMap((prev) => {
-      const next = { ...prev };
-      if (next[studentId]) {
-        delete next[studentId];
-      } else {
-        next[studentId] = true;
-      }
-      if (centerId && date) {
-        try {
-          localStorage.setItem(`attendance-called:${centerId}:${date}`, JSON.stringify(next));
-        } catch {}
-      }
-      return next;
-    });
   };
 
   const active = divisions.filter((d) => d.status === "active");
@@ -467,7 +498,8 @@ export default function Attendance() {
                                 phone={s.mobile}
                                 studentName={s.name}
                                 isCalled={Boolean(calledMap[s.id])}
-                                onToggleCalled={() => handleToggleCalled(s.id)}
+                                loading={Boolean(callLoadingMap[s.id])}
+                                onMarkCalled={() => handleMarkStudentCalled(s.id)}
                               />
                             </td>
                             <td className="cell-actions">

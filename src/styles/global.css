@@ -1156,8 +1156,52 @@ body:has(.app.theme-light),
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.app.theme-light .student-card {
-  border-color: #e2e8f0;
+.app.theme-light .student-card--present {
+  background: #10b981;
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+.app.theme-light .student-card--present .student-card-roll {
+  color: #ffffff;
+}
+
+.app.theme-light .student-card--present:hover {
+  background: #059669;
+}
+
+.app.theme-light .student-card--absent {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+}
+
+.app.theme-light .student-card--absent .student-card-roll {
+  color: #ffffff;
+}
+
+.app.theme-light .student-card--absent:hover {
+  background: #dc2626;
+}
+
+.app.theme-light .desktop-arrow-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+.app.theme-light .desktop-arrow-btn:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
+  .desktop-arrow-btn {
+    display: none !important;
+  }
 }
 
 .app.theme-light .student-name {
