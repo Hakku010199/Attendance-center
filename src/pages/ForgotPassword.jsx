@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Input from "../components/common/Input.jsx";
-import Button from "../components/common/Button.jsx";
+import Icon from "../components/common/Icon.jsx";
 import { sendPasswordReset } from "../services/authService.js";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
@@ -29,20 +29,56 @@ export default function ForgotPassword() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-brand"><span className="auth-logo">CP</span><div><small>CENTER</small><b>Center Portal</b></div></div>
-        <h2>Reset your password</h2>
-        <p className="muted">Enter your account email and we will send you a secure reset link.</p>
+        <div className="auth-header">
+          <div className="auth-eyebrow">Account recovery</div>
+          <h1 className="auth-title">Reset your password</h1>
+          <p className="auth-subtitle">Enter your account email to receive a secure password recovery link</p>
+        </div>
+
         {success ? (
-          <div className="notice notice--success" role="status"><p>{success}</p><Link to="/login" className="btn btn--primary btn--md">Back to Login</Link></div>
+          <div className="notice notice--success" role="status">
+            <p>{success}</p>
+            <Link to="/login" className="btn--auth-primary" style={{ textDecoration: "none" }}>
+              <span>Back to Sign In</span>
+              <Icon name="arrowRight" size={16} />
+            </Link>
+          </div>
         ) : (
           <form noValidate onSubmit={submit} className="auth-form">
-            <Input id="f-email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} error={error} />
+            <Input
+              id="f-email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+              placeholder="abc@example.com"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              error={error}
+              icon={<Icon name="mail" size={16} />}
+            />
             {formError && <p className="form-error" role="alert">{formError}</p>}
-            <Button type="submit" disabled={sending} className="btn--block">{sending ? "Sending…" : "Send Reset Link"}</Button>
+            <button type="submit" disabled={sending} className="btn--auth-primary">
+              {sending ? "Sending…" : (
+                <>
+                  <span>Send Reset Link</span>
+                  <Icon name="arrowRight" size={16} />
+                </>
+              )}
+            </button>
           </form>
         )}
-        <p className="auth-switch"><Link to="/login">Back to Login</Link></p>
+
+        <p className="auth-switch">
+          Remember your password ?{" "}
+          <Link to="/login" className="auth-highlight-link">
+            Sign in
+          </Link>
+        </p>
       </div>
+
+      <p className="auth-legal">
+        Secured with Supabase Authentication
+      </p>
     </div>
   );
 }

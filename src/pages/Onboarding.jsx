@@ -97,55 +97,184 @@ export default function Onboarding() {
   return (
     <div className="onboard">
       <div className="onboard-card">
-        <div className="onboard-top">
-          <span className="auth-logo">CP</span>
-          <span className="muted">{user?.email || "Setting up your center"}</span>
-        </div>
-        <ol className="steps" aria-label="Setup progress">{STEPS.map((s, i) => (
-          <li key={s} className={i === step ? "step step--current" : i < step ? "step step--done" : "step"} aria-current={i === step ? "step" : undefined}>
-            <span className="step-dot">{i < step ? <Icon name="check" size={14} /> : i + 1}</span><span className="step-label">{s}</span>
-          </li>))}</ol>
-
-        {step === 0 && <><h2>Let&apos;s set up your center.</h2><p className="muted">Welcome to Center Portal. We will create your center, assign you as its owner, and take you to your dashboard.</p>
-          <div className="onboard-actions"><span /><Button onClick={() => setStep(1)}>Get Started</Button></div></>}
-
-        {step === 1 && <><h2>Center Information</h2><p className="muted">Tell us about your center. Only the name is required.</p>
-          <div className="form-grid">
-            <Input id="ob-name" label="Center Name *" value={form.name} onChange={set("name")} error={errors.name} placeholder="ABC Academy" />
-            <Input id="ob-email" label="Center Email" type="email" value={form.email} onChange={set("email")} error={errors.email} placeholder="info@abcacademy.com" />
-            <Input id="ob-phone" label="Phone" value={form.phone} onChange={set("phone")} placeholder="+91 98765 43210" />
-            <Input id="ob-addr" label="Address" value={form.address} onChange={set("address")} placeholder="Street, City" />
+        <div className="auth-header">
+          <div className="auth-eyebrow">
+            {user?.email ? `Signed in as ${user.email}` : "Center setup wizard"}
           </div>
-          {slugPreview && <p className="muted">Your address will be: <b>{slugPreview}</b></p>}
-          <div className="onboard-actions">
-            <Button variant="secondary" onClick={() => setStep(0)}>Back</Button>
-            <Button onClick={() => { const e = validateInfo(); if (Object.keys(e).length) return setErrors(e); setStep(2); }}>Continue</Button>
-          </div></>}
+          <h1 className="auth-title">
+            {step === 0 && "Let's set up your center"}
+            {step === 1 && "Center Information"}
+            {step === 2 && "Review your center"}
+            {step === 3 && "Center created successfully"}
+          </h1>
+          <p className="auth-subtitle">
+            {step === 0 && "Welcome to Center Portal. Set up your center profile to start managing students and attendance."}
+            {step === 1 && "Tell us about your center. Only the center name is required."}
+            {step === 2 && "Confirm your center details before creating your organization."}
+            {step === 3 && "You are now the owner. Let's open your center dashboard."}
+          </p>
+        </div>
 
-        {step === 2 && !creating && <><h2>Review your center</h2><p className="muted">Confirm the details before we create your center.</p>
-          <dl className="review">
-            <div><dt>Center Name</dt><dd>{form.name}</dd></div>
-            <div><dt>Center Email</dt><dd>{form.email || "—"}</dd></div>
-            <div><dt>Phone</dt><dd>{form.phone || "—"}</dd></div>
-            <div><dt>Address</dt><dd>{form.address || "—"}</dd></div>
-            <div><dt>Generated Slug</dt><dd><code>{slugPreview || slugify(form.name)}</code></dd></div>
-          </dl>
-          {formError && <p className="form-error" role="alert">{formError}</p>}
-          <div className="onboard-actions">
-            <Button variant="secondary" onClick={() => setStep(1)}>Back</Button>
-            <Button onClick={create}>Create Center</Button>
-          </div></>}
+        <ol className="steps" aria-label="Setup progress">
+          {STEPS.map((s, i) => (
+            <li
+              key={s}
+              className={i === step ? "step step--current" : i < step ? "step step--done" : "step"}
+              aria-current={i === step ? "step" : undefined}
+            >
+              <span className="step-dot">{i < step ? <Icon name="check" size={13} /> : i + 1}</span>
+              <span className="step-label">{s}</span>
+            </li>
+          ))}
+        </ol>
+
+        {step === 0 && (
+          <div className="onboard-step-content">
+            <div className="onboard-actions" style={{ justifyContent: "flex-end", marginTop: "16px" }}>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="btn--auth-primary"
+                style={{ width: "auto", minWidth: "180px" }}
+              >
+                <span>Get Started</span>
+                <Icon name="arrowRight" size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="onboard-step-content">
+            <div className="form-grid">
+              <Input
+                id="ob-name"
+                label="Center Name *"
+                value={form.name}
+                onChange={set("name")}
+                error={errors.name}
+                placeholder="ABC Academy"
+              />
+              <Input
+                id="ob-email"
+                label="Center Email"
+                type="email"
+                value={form.email}
+                onChange={set("email")}
+                error={errors.email}
+                placeholder="info@abcacademy.com"
+              />
+              <Input
+                id="ob-phone"
+                label="Phone"
+                value={form.phone}
+                onChange={set("phone")}
+                placeholder="+91 98765 43210"
+              />
+              <Input
+                id="ob-addr"
+                label="Address"
+                value={form.address}
+                onChange={set("address")}
+                placeholder="Street, City"
+              />
+            </div>
+
+            {slugPreview && (
+              <p className="slug-preview-text">
+                Your portal web address: <b>{slugPreview}</b>
+              </p>
+            )}
+
+            <div className="onboard-actions">
+              <button
+                type="button"
+                onClick={() => setStep(0)}
+                className="btn--social"
+                style={{ padding: "0 20px" }}
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const e = validateInfo();
+                  if (Object.keys(e).length) return setErrors(e);
+                  setStep(2);
+                }}
+                className="btn--auth-primary"
+                style={{ width: "auto", minWidth: "160px" }}
+              >
+                <span>Continue</span>
+                <Icon name="arrowRight" size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && !creating && (
+          <div className="onboard-step-content">
+            <dl className="review">
+              <div><dt>Center Name</dt><dd>{form.name}</dd></div>
+              <div><dt>Center Email</dt><dd>{form.email || "—"}</dd></div>
+              <div><dt>Phone</dt><dd>{form.phone || "—"}</dd></div>
+              <div><dt>Address</dt><dd>{form.address || "—"}</dd></div>
+              <div><dt>Portal Slug</dt><dd><code>{slugPreview || slugify(form.name)}</code></dd></div>
+            </dl>
+
+            {formError && <p className="form-error" role="alert">{formError}</p>}
+
+            <div className="onboard-actions">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="btn--social"
+                style={{ padding: "0 20px" }}
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={create}
+                className="btn--auth-primary"
+                style={{ width: "auto", minWidth: "180px" }}
+              >
+                <span>Create Center</span>
+                <Icon name="arrowRight" size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {step === 2 && creating && (
           <div className="done" aria-busy="true">
             <div className="spinner" aria-hidden="true" />
-            <h2>Creating your center…</h2>
-            <p className="muted">Please wait. Do not close or refresh this page.</p>
-          </div>)}
+            <h2 style={{ color: "#fff", marginTop: "12px" }}>Creating your center…</h2>
+            <p className="auth-subtitle">Please wait. Do not close or refresh this page.</p>
+          </div>
+        )}
 
-        {step === 3 && <div className="done"><span className="done-icon"><Icon name="check" size={28} /></span><h2>Your center has been created successfully.</h2><p className="muted">You are the owner. Let&apos;s open your dashboard.</p>
-          <Button onClick={finish}>Go to Dashboard</Button></div>}
+        {step === 3 && (
+          <div className="done">
+            <span className="done-icon"><Icon name="check" size={32} /></span>
+            <h2 style={{ color: "#fff", marginTop: "8px" }}>Your center is ready!</h2>
+            <p className="auth-subtitle">All workspace permissions and admin privileges are active.</p>
+            <button
+              type="button"
+              onClick={finish}
+              className="btn--auth-primary"
+              style={{ width: "auto", minWidth: "200px", marginTop: "16px" }}
+            >
+              <span>Go to Dashboard</span>
+              <Icon name="arrowRight" size={16} />
+            </button>
+          </div>
+        )}
       </div>
+
+      <p className="auth-legal">
+        Center Portal • Organization Onboarding
+      </p>
     </div>
   );
 }

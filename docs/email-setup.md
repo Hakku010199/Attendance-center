@@ -60,25 +60,25 @@ Authentication → **URL Configuration**:
   - `http://localhost:5175/reset-password`
   - plus the same two paths on your production domain
 
-## 5. Paste the email templates
+## 5. Disable signup confirmation emails (Registration without email confirmation)
 
-Authentication → **Email Templates** → **Confirm signup** — Subject:
+To allow users to register and use Center Portal immediately without needing or waiting for a confirmation email:
 
-```
-Confirm your Center Portal account
-```
+1. Supabase Dashboard → your project → **Authentication → Providers → Email**.
+2. Under **Email Provider Settings**, find **Confirm email** (Enable email confirmations).
+3. **Turn OFF** **Confirm email**.
+4. Click **Save**.
 
-Body (Supabase generates `{{ .ConfirmationURL }}` — never build it yourself):
+> **Note**: Disabling "Confirm email" applies ONLY to user sign-ups (`signUp`).
+> The **Password Reset** function (`resetPasswordForEmail`) is completely separate and remains 100% active.
 
-```html
-<h2>Welcome to Center Portal</h2>
-<p>Your account has been created successfully.</p>
-<p>Please confirm your email address to continue.</p>
-<p><a href="{{ .ConfirmationURL }}">Confirm Email</a></p>
-<p>If you did not create this account, you can safely ignore this email.</p>
-```
+## 6. Paste the password reset email template
 
-**Recovery** template — Subject `Reset your Center Portal password`:
+Since signup confirmation emails are disabled, only the **Recovery** template is needed for password resets:
+
+Supabase Dashboard → Authentication → **Email Templates** → **Reset Password** (or **Recovery**):
+- **Subject:** `Reset your Center Portal password`
+- **Body:**
 
 ```html
 <h2>Reset your password</h2>
@@ -87,9 +87,9 @@ Body (Supabase generates `{{ .ConfirmationURL }}` — never build it yourself):
 <p>If you did not request this, you can safely ignore this email.</p>
 ```
 
-(Recovery templates use `{{ .ConfirmationURL }}` as the recovery link variable.)
+(Recovery templates use `{{ .ConfirmationURL }}` as the secure recovery link variable.)
 
-## 6. `RESEND_FROM_EMAIL` — change later without touching code
+## 7. `RESEND_FROM_EMAIL` — change later without touching code
 
 The app reads the sender ONLY in `api/_lib/emailConfig.js`:
 
@@ -99,7 +99,7 @@ The app reads the sender ONLY in `api/_lib/emailConfig.js`:
 When you verify a domain: update `RESEND_FROM_EMAIL` + the Supabase SMTP
 sender email to match. No application code changes needed.
 
-## 7. Dev-only test endpoint (server-side, does NOT replace Auth emails)
+## 8. Dev-only test endpoint (server-side, does NOT replace Auth emails)
 
 `POST /api/test-email` with JSON `{ "to": "you@example.com" }`:
 
@@ -112,9 +112,9 @@ curl -X POST http://localhost:5175/api/test-email \
 - Verifies `RESEND_API_KEY` + sender only. Returns `{ ok, id, from }`.
 - Disabled in production unless `ALLOW_TEST_EMAIL=true` is set.
 - Requires running under Vercel (`vercel dev`) or a deployed preview —
-  plain `vite dev` does not serve `api/*`. See §9.
+  plain `vite dev` does not serve `api/*`. See §10.
 
-## 8. Local development
+## 9. Local development
 
 ```bash
 npm install
@@ -127,7 +127,7 @@ npx vercel dev     # frontend + api/test-email served together
 npm run build
 ```
 
-## 9. Verify Resend activity
+## 10. Verify Resend activity
 
 - Resend Dashboard → **Emails** — every sent message, status, recipient.
 - Supabase Dashboard → **Auth → Users** — user created / `email_confirmed_at` set.

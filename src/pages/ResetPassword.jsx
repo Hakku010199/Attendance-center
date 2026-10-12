@@ -89,14 +89,24 @@ export default function ResetPassword() {
     setTimeout(() => navigate("/login", { replace: true }), 2000);
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   if (linkError) {
     return (
       <div className="auth-wrap">
         <div className="auth-card">
-          <div className="auth-brand"><span className="auth-logo">CP</span><div><small>CENTER</small><b>Center Portal</b></div></div>
-          <h2>Reset link expired</h2>
+          <div className="auth-header">
+            <div className="auth-eyebrow">Reset link issue</div>
+            <h1 className="auth-title">Link expired or invalid</h1>
+            <p className="auth-subtitle">This password reset link is invalid or has expired.</p>
+          </div>
           <p className="form-error" role="alert">{linkError}</p>
-          <p className="auth-switch"><Link to="/forgot-password">Request a new reset link</Link></p>
+          <p className="auth-switch">
+            <Link to="/forgot-password" className="auth-highlight-link">
+              Request a new reset link
+            </Link>
+          </p>
         </div>
       </div>
     );
@@ -107,23 +117,92 @@ export default function ResetPassword() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-brand"><span className="auth-logo">CP</span><div><small>CENTER</small><b>Center Portal</b></div></div>
-        <h2>Set a new password</h2>
-        <p className="muted">Enter your new password below.</p>
+        <div className="auth-header">
+          <div className="auth-eyebrow">Secure account</div>
+          <h1 className="auth-title">Set new password</h1>
+          <p className="auth-subtitle">Enter and confirm your new password below</p>
+        </div>
+
         {success ? (
           <div className="notice notice--success" role="status">
             <p>{success}</p>
-            <Link to="/login" className="btn btn--primary btn--md">Go to Login</Link>
+            <Link to="/login" className="btn--auth-primary" style={{ textDecoration: "none" }}>
+              <span>Go to Sign In</span>
+              <Icon name="arrowRight" size={16} />
+            </Link>
           </div>
         ) : (
           <form noValidate onSubmit={submit} className="auth-form">
-            <Input id="np-pass" label="New Password" type="password" autoComplete="new-password" placeholder="Minimum 8 characters" value={values.password} onChange={set("password")} error={errors.password} />
-            <Input id="np-confirm" label="Confirm New Password" type="password" autoComplete="new-password" placeholder="Repeat your new password" value={values.confirm} onChange={set("confirm")} error={errors.confirm} />
+            <Input
+              id="np-pass"
+              label="New Password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Minimum 8 characters"
+              value={values.password}
+              onChange={set("password")}
+              error={errors.password}
+              icon={<Icon name="lock" size={16} />}
+              rightSlot={
+                <button
+                  type="button"
+                  className="pwd-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  <Icon name={showPassword ? "eyeOff" : "eye"} size={16} />
+                </button>
+              }
+            />
+
+            <Input
+              id="np-confirm"
+              label="Confirm New Password"
+              type={showConfirm ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Repeat your new password"
+              value={values.confirm}
+              onChange={set("confirm")}
+              error={errors.confirm}
+              icon={<Icon name="lock" size={16} />}
+              rightSlot={
+                <button
+                  type="button"
+                  className="pwd-toggle-btn"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  title={showConfirm ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  <Icon name={showConfirm ? "eyeOff" : "eye"} size={16} />
+                </button>
+              }
+            />
+
             {formError && <p className="form-error" role="alert">{formError}</p>}
-            <Button type="submit" disabled={submitting} className="btn--block">{submitting ? "Updating…" : "Update Password"}</Button>
+
+            <button type="submit" disabled={submitting} className="btn--auth-primary">
+              {submitting ? "Updating…" : (
+                <>
+                  <span>Update Password</span>
+                  <Icon name="arrowRight" size={16} />
+                </>
+              )}
+            </button>
           </form>
         )}
+
+        <p className="auth-switch">
+          Remember your password ?{" "}
+          <Link to="/login" className="auth-highlight-link">
+            Sign in
+          </Link>
+        </p>
       </div>
+
+      <p className="auth-legal">
+        Secured with Supabase Authentication
+      </p>
     </div>
   );
 }

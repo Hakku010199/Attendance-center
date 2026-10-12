@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import Input from "../components/common/Input.jsx";
 import Button from "../components/common/Button.jsx";
 import Icon from "../components/common/Icon.jsx";
-import { registerUser, signInWithGoogle } from "../services/authService.js";
+import { registerUser, resolvePostLoginDestination, signInWithGoogle } from "../services/authService.js";
 import { isSupabaseConfigured } from "../lib/supabase.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function Register() {
   const navigate = useNavigate();
+  const { refreshCenter } = useAuth();
   const [values, setValues] = useState({ email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
@@ -53,56 +55,149 @@ export default function Register() {
     const r = await registerUser({ email: values.email.trim(), password: values.password });
     setSubmitting(false);
     if (r.error) return setFormError(r.error);
-    // Supabase may or may not create a session immediately (email confirmation setting).
+
+    // If a session exists immediately (confirmation email disabled), route directly to portal
     if (r.data?.session) {
-      navigate("/login", { replace: true });
+      const userId = r.data.session.user?.id;
+      const dest = await resolvePostLoginDestination(userId);
+      await refreshCenter();
+      navigate(dest.destination || "/onboarding", { replace: true });
     } else {
-      setSuccess("Registration successful. Please check your email to verify your account.");
+      setSuccess("Account created successfully! You can now sign in with your email and password.");
     }
   };
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-brand"><span className="auth-logo">CP</span><div><small>CENTER</small><b>Center Portal</b></div></div>
-        <h2>Create your account</h2>
-        <p className="muted">Register with Google or your email to get started. You will set up your center after signing in.</p>
+        <div className="auth-header">
+          <div className="auth-eyebrow">Get started</div>
+          <h1 className="auth-title">Create your account</h1>
+          <p className="auth-subtitle">Enter your credentials to continue</p>
+        </div>
+
         {!isSupabaseConfigured && (
           <p className="form-error" role="alert">
             Supabase is not configured. Create a <code>.env</code> file with{" "}
-            <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> (or <code>VITE_SUPABASE_ANON_KEY</code>), then restart the dev server.
+            <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>, then restart the dev server.
           </p>
         )}
+
         {success ? (
           <div className="notice notice--success" role="status">
             <p>{success}</p>
-            <Button onClick={() => navigate("/login")}>Go to Login</Button>
+            <button type="button" onClick={() => navigate("/login")} className="btn--auth-primary">
+              <span>Go to Login</span>
+              <Icon name="arrowRight" size={16} />
+            </button>
           </div>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={submitting || googleLoading}
-              className="btn btn--google btn--block"
-            >
-              <Icon name="google" size={18} />
-              {googleLoading ? "Connecting to Google…" : "Continue with Google"}
-            </button>
+            <div className="auth-social-row">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={submitting || googleLoading}
+                className="btn--social"
+              >
+                <Icon name="google" size={18} />
+                <span>{googleLoading ? "Connecting…" : "Google"}</span>
+              </button>
+            </div>
 
-            <div className="auth-divider"><span>or</span></div>
+            <div className="auth-divider"><span>OR</span></div>
 
             <form noValidate onSubmit={submit} className="auth-form">
-              <Input id="r-email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" value={values.email} onChange={set("email")} error={errors.email} />
-              <Input id="r-pass" label="Password" type="password" autoComplete="new-password" placeholder="Minimum 8 characters" value={values.password} onChange={set("password")} error={errors.password} />
-              <Input id="r-confirm" label="Confirm Password" type="password" autoComplete="new-password" placeholder="Repeat your password" value={values.confirm} onChange={set("confirm")} error={errors.confirm} />
+              <Input
+                id="r-email"
+                label="Email"
+                type="email"
+                autoComplete="email"
+                placeholder="abc@example.com"
+                value={values.email}
+                onChange={set("email")}
+                error={errors.email}
+                icon={<Icon name="mail" size={16} />}
+              />
+
+              <Input
+                id="r-pass"
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="••••••••••••••••"
+                value={values.password}
+                onChange={set("password")}
+                error={errors.password}
+                icon={<Icon name="lock" size={16} />}
+                rightSlot={
+                  <button
+                    type="button"
+                    className="pwd-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    <Icon name={showPassword ? "eyeOff" : "eye"} size={16} />
+                  </button>
+                }
+              />
+
+              <Input
+                id="r-confirm"
+                label="Confirm Password"
+                type={showConfirm ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="••••••••••••••••"
+                value={values.confirm}
+                onChange={set("confirm")}
+                error={errors.confirm}
+                icon={<Icon name="lock" size={16} />}
+                rightSlot={
+                  <button
+                    type="button"
+                    className="pwd-toggle-btn"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    title={showConfirm ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    <Icon name={showConfirm ? "eyeOff" : "eye"} size={16} />
+                  </button>
+                }
+              />
+
               {formError && <p className="form-error" role="alert">{formError}</p>}
-              <Button type="submit" disabled={submitting || googleLoading} className="btn--block">{submitting ? "Creating account…" : "Create Account"}</Button>
+
+              <button
+                type="submit"
+                disabled={submitting || googleLoading}
+                className="btn--auth-primary"
+              >
+                {submitting ? "Creating account…" : (
+                  <>
+                    <span>Create account</span>
+                    <Icon name="arrowRight" size={16} />
+                  </>
+                )}
+              </button>
             </form>
           </>
         )}
-        <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
+
+        <p className="auth-switch">
+          Already have an account ?{" "}
+          <Link to="/login" className="auth-highlight-link">
+            Sign in
+          </Link>
+        </p>
       </div>
+
+      <p className="auth-legal">
+        By signing up, you agree to our Terms and Privacy Policy
+      </p>
     </div>
   );
 }

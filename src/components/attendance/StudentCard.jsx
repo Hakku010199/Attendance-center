@@ -9,8 +9,6 @@ export default function StudentCard({ student, isAbsent, onToggle }) {
       aria-pressed={!isAbsent}
     >
       <span className="student-card-roll">{roll}</span>
-      <span className="student-card-name">{student.name}</span>
-      <span className="student-card-badge">{isAbsent ? "Absent" : "Present"}</span>
     </button>
   );
 }

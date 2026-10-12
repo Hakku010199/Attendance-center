@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { to: "/portal", label: "Dashboard", icon: "dashboard", end: true },
   { to: "/attendance", label: "Attendance", icon: "attendance" },
   { to: "/daily-attendance", label: "Daily Wise Attendance", icon: "daily" },
-  { to: "/reports", label: "History", icon: "history" },
+  { to: "/reports", label: "Report", icon: "reports" },
 ];
 
 const MANAGEMENT_ITEMS = [
@@ -86,11 +86,6 @@ export default function Sidebar({ center, user, open, onClose, onSignOut }) {
           <button type="button" className="nav-link nav-signout" onClick={signOut}>
             <Icon name="logout" /><span className="nav-text">Sign Out</span>
           </button>
-          <div className="user-card">
-            <span className="avatar">{(user.name || "O")[0]}</span>
-            <div className="nav-text user-meta"><b>{user.name}</b><small>{user.email}</small></div>
-            <span className="nav-text"><Icon name="chevron" size={16} /></span>
-          </div>
         </div>
       </aside>
     </>

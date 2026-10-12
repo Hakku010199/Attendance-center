@@ -45,15 +45,9 @@ const friendlyAuthError = (error, fallback) => {
 export const registerUser = async ({ email, password }) => {
   if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
   try {
-    // Supabase Auth generates the confirmation token/URL and delivers it
-    // through the Resend SMTP provider configured in the Supabase dashboard.
-    // Never call Resend from the browser.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
     if (error) return { error: friendlyAuthError(error, "Unable to create your account. Please try again."), raw: error };
     return { data };

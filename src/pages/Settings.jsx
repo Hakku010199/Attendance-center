@@ -6,9 +6,12 @@ import { useToast } from "../components/common/Toast.jsx";
 import { usePortal } from "../components/layout/AppLayout.jsx";
 import { updateCenter } from "../services/centerService.js";
 import { sendPasswordReset } from "../services/authService.js";
+import { useTheme } from "../context/ThemeContext.jsx";
+import Icon from "../components/common/Icon.jsx";
 
 export default function Settings() {
   const { center, user, authUser, membership, reload, signOut } = usePortal();
+  const { theme, setTheme } = useTheme();
   const toast = useToast();
   const navigate = useNavigate();
   const [v, setV] = useState({ name: center.name ?? "", email: center.email ?? "", phone: center.phone ?? "", address: center.address ?? "" });
@@ -50,6 +53,59 @@ export default function Settings() {
         {formError && <p className="form-error" role="alert">{formError}</p>}
         <div><Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button></div>
       </form>
+
+      <section className="card form">
+        <h3>Appearance</h3>
+        <p className="muted" style={{ marginTop: "-8px", marginBottom: "8px" }}>
+          Choose your interface color theme.
+        </p>
+        <div className="theme-switcher-grid">
+          <button
+            type="button"
+            className={`theme-card-btn ${theme === "dark" ? "theme-card-btn--active" : ""}`}
+            onClick={() => setTheme("dark")}
+          >
+            <div className="theme-card-preview theme-card-preview--dark">
+              <div className="preview-nav" />
+              <div className="preview-body">
+                <div className="preview-line" />
+                <div className="preview-tile" />
+              </div>
+            </div>
+            <div className="theme-card-text">
+              <div className="theme-card-title">
+                <Icon name="moon" size={16} />
+                <span>Dark Theme</span>
+              </div>
+              <small>Default dark palette</small>
+            </div>
+            {theme === "dark" && <span className="theme-check-badge"><Icon name="check" size={14} /></span>}
+          </button>
+
+          <button
+            type="button"
+            className={`theme-card-btn ${theme === "light" ? "theme-card-btn--active" : ""}`}
+            onClick={() => setTheme("light")}
+          >
+            <div className="theme-card-preview theme-card-preview--light">
+              <div className="preview-nav" />
+              <div className="preview-body">
+                <div className="preview-line" />
+                <div className="preview-tile" />
+              </div>
+            </div>
+            <div className="theme-card-text">
+              <div className="theme-card-title">
+                <Icon name="sun" size={16} />
+                <span>White Background</span>
+              </div>
+              <small>Clean white workspace</small>
+            </div>
+            {theme === "light" && <span className="theme-check-badge"><Icon name="check" size={14} /></span>}
+          </button>
+        </div>
+      </section>
+
       <section className="card form"><h3>Account Settings</h3>
         <div className="form-grid">
           <Input id="u-name" label="User Name" value={user.name} readOnly /><Input id="u-email" label="Email" value={user.email} readOnly />

@@ -208,87 +208,369 @@
   }
 }
 
-/* Student Square Button */
+/* Student Square Button - Glowing Glassmorphism Design */
 .student-card {
   aspect-ratio: 1 / 1;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
+  border-radius: 12px;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 6px 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
-  position: relative;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              background 0.2s ease;
   user-select: none;
   font-family: inherit;
   outline: none;
+  overflow: hidden;
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
 }
 
 .student-card:focus-visible {
-  outline: 2px solid var(--accent, #5b4bf0);
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
 
+/* Lens flare & horizontal light spark at the top rim */
+.student-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 65%;
+  height: 2px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 3;
+  transition: all 0.2s ease;
+}
+
+/* Glass reflection divider, edge flare nodes, and bottom rim light */
+.student-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+  transition: all 0.2s ease;
+}
+
+/* --- Present State (Green Luminescence) --- */
 .student-card--present {
-  background: rgba(52, 211, 153, 0.12);
-  border-color: rgba(52, 211, 153, 0.35);
-  color: #ecfdf5;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(52, 211, 153, 0.26) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(6, 78, 59, 0.1) 50%, rgba(6, 78, 59, 0.24) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.6);
+  box-shadow:
+    0 0 12px rgba(16, 185, 129, 0.35),
+    0 0 24px rgba(16, 185, 129, 0.15),
+    inset 0 0 14px rgba(16, 185, 129, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.student-card--present::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(52, 211, 153, 0.8) 25%, #ffffff 50%, rgba(52, 211, 153, 0.8) 75%, transparent 100%);
+  box-shadow:
+    0 0 6px 1px #ffffff,
+    0 0 14px 2px #34d399,
+    0 0 22px 4px rgba(52, 211, 153, 0.7);
+}
+
+.student-card--present::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 48%, rgba(52, 211, 153, 0.35) 49%, rgba(255, 255, 255, 0.5) 50%, rgba(52, 211, 153, 0.25) 51%, transparent 53%),
+    radial-gradient(ellipse 3px 12px at 0% 50%, #ffffff 0%, #34d399 50%, transparent 100%),
+    radial-gradient(ellipse 3px 12px at 100% 50%, #ffffff 0%, #34d399 50%, transparent 100%),
+    radial-gradient(ellipse 60% 3px at 50% 100%, #34d399 0%, transparent 100%);
 }
 
 .student-card--present:hover {
-  background: rgba(52, 211, 153, 0.22);
   border-color: #34d399;
-  transform: translateY(-1.5px);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(52, 211, 153, 0.35) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(16, 185, 129, 0.24) 0%, rgba(6, 78, 59, 0.16) 50%, rgba(6, 78, 59, 0.32) 100%);
+  box-shadow:
+    0 0 16px rgba(52, 211, 153, 0.55),
+    0 0 32px rgba(16, 185, 129, 0.3),
+    inset 0 0 18px rgba(52, 211, 153, 0.28),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px) scale(1.02);
 }
 
+.student-card--present:hover::before {
+  box-shadow:
+    0 0 8px 2px #ffffff,
+    0 0 18px 4px #34d399,
+    0 0 28px 7px rgba(52, 211, 153, 0.85);
+}
+
+/* --- Absent State (Red Luminescence) --- */
 .student-card--absent {
-  background: rgba(248, 113, 113, 0.15);
-  border-color: rgba(248, 113, 113, 0.45);
-  color: #fef2f2;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(248, 113, 113, 0.26) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(239, 68, 68, 0.16) 0%, rgba(153, 27, 27, 0.1) 50%, rgba(127, 29, 29, 0.24) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  box-shadow:
+    0 0 12px rgba(239, 68, 68, 0.35),
+    0 0 24px rgba(239, 68, 68, 0.15),
+    inset 0 0 14px rgba(239, 68, 68, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.student-card--absent::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(248, 113, 113, 0.8) 25%, #ffffff 50%, rgba(248, 113, 113, 0.8) 75%, transparent 100%);
+  box-shadow:
+    0 0 6px 1px #ffffff,
+    0 0 14px 2px #f87171,
+    0 0 22px 4px rgba(248, 113, 113, 0.7);
+}
+
+.student-card--absent::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 48%, rgba(248, 113, 113, 0.35) 49%, rgba(255, 255, 255, 0.5) 50%, rgba(248, 113, 113, 0.25) 51%, transparent 53%),
+    radial-gradient(ellipse 3px 12px at 0% 50%, #ffffff 0%, #f87171 50%, transparent 100%),
+    radial-gradient(ellipse 3px 12px at 100% 50%, #ffffff 0%, #f87171 50%, transparent 100%),
+    radial-gradient(ellipse 60% 3px at 50% 100%, #f87171 0%, transparent 100%);
 }
 
 .student-card--absent:hover {
-  background: rgba(248, 113, 113, 0.25);
   border-color: #f87171;
-  transform: translateY(-1.5px);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(248, 113, 113, 0.35) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(239, 68, 68, 0.24) 0%, rgba(153, 27, 27, 0.16) 50%, rgba(127, 29, 29, 0.32) 100%);
+  box-shadow:
+    0 0 16px rgba(248, 113, 113, 0.55),
+    0 0 32px rgba(239, 68, 68, 0.3),
+    inset 0 0 18px rgba(248, 113, 113, 0.28),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px) scale(1.02);
 }
 
+.student-card--absent:hover::before {
+  box-shadow:
+    0 0 8px 2px #ffffff,
+    0 0 18px 4px #f87171,
+    0 0 28px 7px rgba(248, 113, 113, 0.85);
+}
+
+.student-card:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Internal Elements (ensuring elevation above pseudo elements) */
 .student-card-roll {
-  font-size: 1.15rem;
+  position: relative;
+  z-index: 2;
+  font-size: 1.55rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .student-card-roll {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-card-roll {
+    font-size: 1.2rem;
+  }
 }
 
 .student-card--present .student-card-roll {
-  color: #34d399;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.7), 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
 .student-card--absent .student-card-roll {
-  color: #f87171;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(248, 113, 113, 0.7), 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
-.student-card-name {
-  font-size: 0.72rem;
-  font-weight: 500;
-  max-width: 90%;
+/* ==========================================================================
+   Swipeable Phone Number (Daily Wise Attendance)
+   ========================================================================== */
+.swipe-phone-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-top: 3px;
-  text-align: center;
-  opacity: 0.9;
+  user-select: none;
+  max-width: 100%;
 }
 
-.student-card-badge {
-  font-size: 0.62rem;
-  font-weight: 600;
+/* Background action track revealed during swipe */
+.swipe-phone-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 12px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.35) 0%, rgba(59, 130, 246, 0.15) 100%);
+  border: 1px dashed rgba(59, 130, 246, 0.5);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.swipe-phone-track.track-active {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.65) 0%, rgba(59, 130, 246, 0.4) 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.swipe-phone-track-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #60a5fa;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-top: 2px;
-  opacity: 0.75;
+  letter-spacing: 0.05em;
+}
+
+/* Foreground sliding pill */
+.swipe-phone-pill {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1),
+              background 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.swipe-phone-pill.is-dragging {
+  transition: none !important;
+  cursor: grabbing;
+}
+
+.swipe-phone-pill .phone-call-link {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.swipe-phone-pill .phone-call-icon {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.swipe-phone-pill:hover .phone-call-icon {
+  background: #22c55e;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.swipe-phone-pill .phone-call-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* Small right arrow hint */
+.swipe-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 3px;
+  opacity: 0.6;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.swipe-phone-pill:hover .swipe-hint {
+  opacity: 1;
+  color: #60a5fa;
+  transform: translateX(2px);
+}
+
+/* --- CALLED STATE (BLUE) --- */
+.swipe-phone-container.is-called .swipe-phone-pill,
+.swipe-phone-pill.pill-called {
+  background: rgba(37, 99, 235, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.65) !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.18) !important;
+}
+
+.swipe-phone-container.is-called .phone-call-text {
+  color: #93c5fd !important;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.swipe-phone-container.is-called .phone-call-icon {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+}
+
+.swipe-phone-container.is-called .swipe-phone-pill:hover {
+  background: rgba(37, 99, 235, 0.28) !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.45) !important;
+}
+
+.called-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #2563eb;
+  border: 1px solid #3b82f6;
+  border-radius: 999px;
+  padding: 1px 6px;
+  cursor: pointer;
+  margin-left: 4px;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s ease;
+}
+
+.called-chip:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
 }
 
 /* 3-Column Action Bar */

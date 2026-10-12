@@ -23,6 +23,7 @@ import AttendanceFilters from "../components/attendance/AttendanceFilters.jsx";
 import AttendanceSummary from "../components/attendance/AttendanceSummary.jsx";
 import StudentGrid from "../components/attendance/StudentGrid.jsx";
 import AbsenteesPanel from "../components/attendance/AbsenteesPanel.jsx";
+import SwipeablePhone from "../components/attendance/SwipeablePhone.jsx";
 import "../styles/attendance.css";
 
 const fmtDate = (iso) => {
@@ -124,6 +125,45 @@ export default function Attendance() {
     }
     return [];
   });
+
+  // Called status tracking for Daily Wise Attendance (persisted in localStorage)
+  const [calledMap, setCalledMap] = useState(() => {
+    if (centerId && date) {
+      try {
+        const raw = localStorage.getItem(`attendance-called:${centerId}:${date}`);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    if (centerId && date) {
+      try {
+        const raw = localStorage.getItem(`attendance-called:${centerId}:${date}`);
+        setCalledMap(raw ? JSON.parse(raw) : {});
+      } catch {
+        setCalledMap({});
+      }
+    }
+  }, [centerId, date]);
+
+  const handleToggleCalled = (studentId) => {
+    setCalledMap((prev) => {
+      const next = { ...prev };
+      if (next[studentId]) {
+        delete next[studentId];
+      } else {
+        next[studentId] = true;
+      }
+      if (centerId && date) {
+        try {
+          localStorage.setItem(`attendance-called:${centerId}:${date}`, JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
 
   const active = divisions.filter((d) => d.status === "active");
 
@@ -423,18 +463,12 @@ export default function Attendance() {
                               {isAbs ? <span className="badge-absent">Absent</span> : <span className="badge-present">Present</span>}
                             </td>
                             <td data-label="Mobile">
-                              {s.mobile ? (
-                                <a
-                                  href={`tel:${s.mobile}`}
-                                  className="phone-call-link"
-                                  title={`Call ${s.name} (${s.mobile})`}
-                                >
-                                  <span className="phone-call-icon"><Icon name="phone" size={12} /></span>
-                                  <span className="phone-call-text">{s.mobile}</span>
-                                </a>
-                              ) : (
-                                <span className="muted">—</span>
-                              )}
+                              <SwipeablePhone
+                                phone={s.mobile}
+                                studentName={s.name}
+                                isCalled={Boolean(calledMap[s.id])}
+                                onToggleCalled={() => handleToggleCalled(s.id)}
+                              />
                             </td>
                             <td className="cell-actions">
                               <div className="seg" role="group" aria-label={`Attendance for ${s.name}`}>

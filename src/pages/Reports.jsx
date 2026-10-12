@@ -116,7 +116,7 @@ export default function Reports() {
         <div className="field"><label htmlFor="h-date">Date</label><input id="h-date" className="control" type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} /></div>
         <Select id="h-div" label="Division" options={[{ value: "all", label: "All Divisions" }, ...active.map((d) => ({ value: d.id, label: d.name }))]} value={division} onChange={(e) => setDivision(e.target.value)} />
         <Select id="h-status" label="Status" options={STATUS_OPTIONS} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} />
-        <div className="search"><Icon name="search" size={16} /><input className="control" type="search" placeholder="Search name or roll" aria-label="Search history" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="search"><Icon name="search" size={16} /><input className="control" type="search" placeholder="Search name or roll" aria-label="Search reports" value={q} onChange={(e) => setQ(e.target.value)} /></div>
       </div>
       {(hasFilter) && <div className="page-actions"><Button variant="secondary" size="sm" onClick={clearFilters}>Clear Filters</Button></div>}
       <Async state={state}>{(rawRows) => {
@@ -125,7 +125,7 @@ export default function Reports() {
         return (
           <section className="card card--flush">
             <p className="muted history-meta">{rows.length} {statusLabel}record{rows.length === 1 ? "" : "s"} found</p>
-            {rows.length === 0 ? <EmptyState title="No history found" text={statusFilter !== "all" ? `No ${statusFilter} records found for this selection.` : "Try a different date, division, or search."} /> : (
+            {rows.length === 0 ? <EmptyState title="No records found" text={statusFilter !== "all" ? `No ${statusFilter} records found for this selection.` : "Try a different date, division, or search."} /> : (
             <div className="table-wrap"><table className="table">
               <thead>
                 <tr>

@@ -5,6 +5,7 @@ import Header from "./Header.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { LoadingScreen } from "../auth/RouteGuards.jsx";
 import { ATTENDANCE_UPDATED, DIVISIONS_UPDATED } from "../../utils/events.js";
+import { useTheme } from "../../context/ThemeContext.jsx";
 
 const PortalContext = createContext(null);
 // Center + user come from Supabase session (center_members). Never chosen by the user.
@@ -40,9 +41,11 @@ export default function AppLayout({ children }) {
     role: membership?.role === "owner" ? "Center Owner" : membership?.role || "Member",
   };
 
+  const { theme } = useTheme();
+
   return (
     <PortalContext.Provider value={{ center, user: portalUser, authUser: user, membership, signOut, reload: refreshCenter, attendanceRefreshKey, divisionsKey }}>
-      <div className="app">
+      <div className={`app ${theme === "light" ? "theme-light" : "theme-dark"}`}>
         <Sidebar center={center} user={portalUser} open={open} onClose={() => setOpen(false)} onSignOut={signOut} />
         <div className="main">
           <Header center={center} user={portalUser} onMenu={() => setOpen(true)} onSignOut={signOut} />
