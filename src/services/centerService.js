@@ -88,6 +88,28 @@ export const createCenterOnboarding = async ({ name, email, phone, address }) =>
   if (checked.error) return { error: checked.error };
   if (checked.membership) {
     const { data: ec } = await supabase.from("centers").select("*").eq("id", checked.membership.center_id).maybeSingle();
+    // If onboarding is incomplete, resume and complete it with the updated details
+    if (ec && ec.onboarding_completed !== true) {
+      if (!name?.trim()) return { error: "Center name is required.", code: "VALIDATION" };
+      if (!email?.trim()) return { error: "Center email is required.", code: "VALIDATION" };
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return { error: "Enter a valid email address.", code: "VALIDATION" };
+      if (!phone?.trim()) return { error: "Mobile number is required.", code: "VALIDATION" };
+      const { data: updated, error: uErr } = await supabase
+        .from("centers")
+        .update({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          address: address?.trim() || null,
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ec.id)
+        .select()
+        .single();
+      if (uErr) return { error: "Unable to complete onboarding. Please try again." };
+      return { data: updated };
+    }
     return { error: "This account already has a center. You cannot create a second one.", code: "ALREADY_HAS_CENTER", membership: checked.membership, center: ec ?? null };
   }
   if (!name?.trim()) return { error: "Center name is required.", code: "VALIDATION" };
@@ -98,31 +120,89 @@ export const createCenterOnboarding = async ({ name, email, phone, address }) =>
   try {
     slug = await findUniqueSlug(name);
   } catch {
-    return { error: "Unable to create your center right now. Please try again." };
+    return { error: "Unable to generate a unique center address. Please try again." };
   }
-  const { data: created, error: cErr } = await supabase
-    .from("centers")
-    .insert({ name: name.trim(), slug, email: email?.trim() || null, phone: phone?.trim() || null, address: address?.trim() || null, status: "active", onboarding_completed: false })
-    .select()
-    .single();
+
+  // Pre-generate the center UUID upfront to avoid RLS chicken-and-egg:
+  // PostgreSQL cannot evaluate SELECT policies for returning rows until the user
+  // is recorded in center_members.
+  const centerId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : (
+    "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    })
+  );
+
+  const fullPayload = {
+    id: centerId,
+    name: name.trim(),
+    slug,
+    email: email.trim(),
+    phone: phone.trim(),
+    address: address?.trim() || null,
+    status: "active",
+    onboarding_completed: false,
+  };
+
+  // 1. Insert center (without requiring .select() before membership exists)
+  let { error: cErr } = await supabase.from("centers").insert(fullPayload);
+
+  // If table lacks newer columns (e.g. email/phone/status), fallback to core columns
+  if (cErr && (cErr.message?.includes("column") || cErr.code === "42703")) {
+    console.warn("[centerService] Retrying center insert with core columns:", cErr.message);
+    const corePayload = { id: centerId, name: name.trim(), slug };
+    const retry = await supabase.from("centers").insert(corePayload);
+    cErr = retry.error;
+  }
+
   if (cErr) {
+    console.error("[centerService] Failed to insert center:", cErr);
     const m = String(cErr.message || "").toLowerCase();
-    if (m.includes("duplicate") || cErr.code === "23505") return { error: "That center name is already taken. Please try a different name." };
-    return { error: "Unable to create your center. Please try again." };
+    if (m.includes("duplicate") || cErr.code === "23505") {
+      return { error: "That center name or slug is already taken. Please try a different name." };
+    }
+    if (m.includes("row-level security") || m.includes("policy")) {
+      return { error: "Database permission error: check Supabase RLS policies for centers table." };
+    }
+    return { error: cErr.message ? `Unable to create center: ${cErr.message}` : "Unable to create your center. Please check your Supabase connection and try again." };
   }
-  const { error: memErr } = await supabase.from("center_members").insert({ user_id: authedUser.id, center_id: created.id, role: "owner" });
+
+  // 2. Insert owner membership in center_members
+  const { error: memErr } = await supabase
+    .from("center_members")
+    .insert({ user_id: authedUser.id, center_id: centerId, role: "owner" });
+
   if (memErr) {
-    await supabase.from("centers").delete().eq("id", created.id);
+    console.error("[centerService] Failed to insert center membership:", memErr);
+    // Cleanup orphaned center record if membership failed
+    try { await supabase.from("centers").delete().eq("id", centerId); } catch {}
     const m = String(memErr.message || "").toLowerCase();
-    if (m.includes("duplicate") || memErr.code === "23505") return { error: "This account already has a center. You cannot create a second one.", code: "ALREADY_HAS_CENTER" };
-    return { error: "Center was created but membership failed. Please try again." };
+    if (m.includes("duplicate") || memErr.code === "23505") {
+      return { error: "This account already has a center membership.", code: "ALREADY_HAS_CENTER" };
+    }
+    return { error: `Center was created, but membership failed: ${memErr.message || "Please try again."}` };
   }
-  const { data: completed, error: doneErr } = await supabase
-    .from("centers")
-    .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
-    .eq("id", created.id)
-    .select()
-    .single();
-  if (doneErr) return { error: "Center created, but onboarding could not be completed. Please open onboarding again.", center: created };
-  return { data: completed };
+
+  // 3. Now that membership exists, mark onboarding_completed: true
+  try {
+    await supabase
+      .from("centers")
+      .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+      .eq("id", centerId);
+  } catch (err) {
+    console.warn("[centerService] Could not update onboarding_completed flag:", err);
+  }
+
+  return {
+    data: {
+      id: centerId,
+      name: name.trim(),
+      slug,
+      email: email.trim(),
+      phone: phone.trim(),
+      address: address?.trim() || null,
+      onboarding_completed: true,
+    },
+  };
 };

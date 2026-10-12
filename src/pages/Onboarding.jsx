@@ -39,8 +39,18 @@ export default function Onboarding() {
       const { membership } = await getCurrentMembership(auth.user.id);
       if (!live) return;
       if (membership) {
-        const { data: c } = await supabase.from("centers").select("id, onboarding_completed").eq("id", membership.center_id).maybeSingle();
-        if (c?.onboarding_completed === true) navigate("/portal", { replace: true });
+        const { data: c } = await supabase.from("centers").select("*").eq("id", membership.center_id).maybeSingle();
+        if (c?.onboarding_completed === true) {
+          navigate("/portal", { replace: true });
+        } else if (c) {
+          setForm({
+            name: c.name || "",
+            email: c.email || auth.user.email || "",
+            phone: c.phone || "",
+            address: c.address || "",
+          });
+          setStep(1);
+        }
       }
     })();
     return () => { live = false; };
