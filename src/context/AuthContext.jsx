@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase.js";
 import { getCurrentUserCenter } from "../services/centerService.js";
-import { logoutUser } from "../services/authService.js";
+import { logoutUser, isCenterInactive, CENTER_INACTIVE_MSG } from "../services/authService.js";
 
 const AuthContext = createContext(null);
 
@@ -31,6 +31,10 @@ export function AuthProvider({ children }) {
       setCenterError(result.error);
       setCenter(null);
       setMembership(null);
+    } else if (result.center && isCenterInactive(result.center)) {
+      setCenter(result.center);
+      setMembership(result.membership);
+      setCenterError(CENTER_INACTIVE_MSG);
     } else {
       setCenter(result.center);
       setMembership(result.membership);

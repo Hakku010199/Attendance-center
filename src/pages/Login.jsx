@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Input from "../components/common/Input.jsx";
 import Button from "../components/common/Button.jsx";
 import Icon from "../components/common/Icon.jsx";
@@ -11,10 +11,11 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { refreshCenter } = useAuth();
   const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [formError, setFormError] = useState("");
+  const [formError, setFormError] = useState(() => location.state?.error || "");
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -52,9 +53,13 @@ export default function Login() {
     const userId = r.data?.user?.id;
     // Post-login routing: user -> center_members -> centers.
     const dest = await resolvePostLoginDestination(userId);
+    if (dest.error) {
+      await refreshCenter();
+      setSubmitting(false);
+      return setFormError(dest.error);
+    }
     await refreshCenter();
     setSubmitting(false);
-    if (dest.error) return setFormError(dest.error);
     navigate(dest.destination || "/onboarding", { replace: true });
   };
 
@@ -142,7 +147,32 @@ export default function Login() {
             <span>Remember me for 30 days</span>
           </label>
 
-          {formError && <p className="form-error" role="alert">{formError}</p>}
+          {formError && (
+            <div
+              className={formError.toLowerCase().includes("inactive") ? "form-warning" : "form-error"}
+              role="alert"
+            >
+              {formError.toLowerCase().includes("inactive") && (
+                <Icon name="alert" size={18} />
+              )}
+              <span>
+                {formError.includes("8139041877") ? (
+                  <>
+                    Center is inactive connect{" "}
+                    <a
+                      href="tel:8139041877"
+                      style={{ color: "inherit", textDecoration: "underline", fontWeight: 700 }}
+                    >
+                      8139041877
+                    </a>
+                    .
+                  </>
+                ) : (
+                  formError
+                )}
+              </span>
+            </div>
+          )}
 
           <button
             type="submit"

@@ -131,8 +131,23 @@ export const updatePassword = async (newPassword) => {
   }
 };
 
+export const CENTER_INACTIVE_MSG = "Center is inactive connect 8139041877.";
+
+export const isCenterInactive = (center) => {
+  if (!center) return false;
+  const statusStr = String(center.status ?? "").trim().toLowerCase();
+  return (
+    statusStr === "inactive" ||
+    statusStr === "disabled" ||
+    statusStr === "suspended" ||
+    center.is_active === false ||
+    center.active === false
+  );
+};
+
 // Resolves the post-login destination for an authenticated user:
 // "onboarding" when no membership/center or onboarding incomplete, else "portal".
+// Blocks login and logs out if the center is inactive.
 export const resolvePostLoginDestination = async (userId) => {
   if (!userId) return { destination: "/login" };
   const { data: membership, error: mErr } = await supabase
@@ -144,11 +159,24 @@ export const resolvePostLoginDestination = async (userId) => {
   if (!membership) return { destination: "/onboarding" };
   const { data: center, error: cErr } = await supabase
     .from("centers")
-    .select("id, onboarding_completed")
+    .select("*")
     .eq("id", membership.center_id)
     .maybeSingle();
   if (cErr) return { error: "Unable to load your center. Please try again.", destination: null };
-  if (!center || center.onboarding_completed !== true) return { destination: "/onboarding" };
+  if (!center) return { destination: "/onboarding" };
+
+  if (isCenterInactive(center)) {
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    return {
+      error: CENTER_INACTIVE_MSG,
+      code: "CENTER_INACTIVE",
+      destination: null,
+    };
+  }
+
+  if (center.onboarding_completed !== true) return { destination: "/onboarding" };
   return { destination: "/portal" };
 };
 

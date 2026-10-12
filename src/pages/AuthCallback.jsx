@@ -18,7 +18,7 @@ export default function AuthCallback() {
       const dest = await resolvePostLoginDestination(userId);
       if (!live) return;
       if (dest.error) {
-        setError(dest.error);
+        navigate("/login", { replace: true, state: { error: dest.error } });
         return;
       }
       navigate(dest.destination || "/onboarding", { replace: true });
