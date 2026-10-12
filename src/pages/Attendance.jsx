@@ -142,6 +142,7 @@ export default function Attendance() {
     return {};
   });
   const [callLoadingMap, setCallLoadingMap] = useState({});
+  const [dailyFilter, setDailyFilter] = useState("all"); // "all" | "present" | "absent"
 
   // Load persistent call tracking records from Supabase
   useEffect(() => {
@@ -428,6 +429,13 @@ export default function Attendance() {
 
   // Render Table View if on /daily-attendance
   if (isDailyWise) {
+    const displayedTableStudents = tableStudents.filter((s) => {
+      const isAbs = tableAbsent.includes(s.id);
+      if (dailyFilter === "absent") return isAbs;
+      if (dailyFilter === "present") return !isAbs;
+      return true;
+    });
+
     return (
       <>
         <div className="toolbar toolbar--att">
@@ -452,13 +460,28 @@ export default function Attendance() {
           />
         </div>
         <div className="stat-grid stat-grid--daily">
-          <StatCard label="Total Students" value={tableStudents.length} icon="students" />
-          <StatCard label="Present" value={tablePresentCount} icon="attendance" tone="green" />
-          <StatCard label="Absent" value={tableAbsentCount} icon="attendance" tone="red" />
           <StatCard
-            label="Attendance %"
-            value={`${tableStudents.length ? Math.round((tablePresentCount / tableStudents.length) * 100) : 0}%`}
-            icon="reports"
+            label="Total Students"
+            value={tableStudents.length}
+            icon="students"
+            active={dailyFilter === "all"}
+            onClick={() => setDailyFilter("all")}
+          />
+          <StatCard
+            label="Present"
+            value={tablePresentCount}
+            icon="attendance"
+            tone="green"
+            active={dailyFilter === "present"}
+            onClick={() => setDailyFilter((prev) => (prev === "present" ? "all" : "present"))}
+          />
+          <StatCard
+            label="Absent"
+            value={tableAbsentCount}
+            icon="attendance"
+            tone="red"
+            active={dailyFilter === "absent"}
+            onClick={() => setDailyFilter((prev) => (prev === "absent" ? "all" : "absent"))}
           />
         </div>
         <Async state={tableList}>
@@ -468,6 +491,15 @@ export default function Attendance() {
                 <EmptyState
                   title="No records"
                   text={divisionId ? "No active students in this division for this date." : "Pick a division to view its daily records."}
+                />
+              ) : displayedTableStudents.length === 0 ? (
+                <EmptyState
+                  title={dailyFilter === "absent" ? "No Absentees" : "No Present Students"}
+                  text={
+                    dailyFilter === "absent"
+                      ? "All students are marked Present for this date."
+                      : "All students are marked Absent for this date."
+                  }
                 />
               ) : (
                 <div className="table-wrap">
@@ -482,7 +514,7 @@ export default function Attendance() {
                       </tr>
                     </thead>
                     <tbody>
-                      {tableStudents.map((s) => {
+                      {displayedTableStudents.map((s) => {
                         const isAbs = tableAbsent.includes(s.id);
                         return (
                           <tr key={s.id}>

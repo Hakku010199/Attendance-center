@@ -45,6 +45,27 @@
 }
 
 @media (max-width: 680px) {
+  .attendance-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+    align-items: end;
+  }
+
+  .filter-group--date,
+  .filter-group--division {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+
+  .attendance-filters .control {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
   .attendance-summary {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
@@ -225,12 +246,12 @@
   }
 }
 
-/* Student Square Button - Clean Modern Summary-Matched Design */
+/* Student Square Button - Tactile 3D Matte Design (Matching Mockup) */
 .student-card {
   aspect-ratio: 1 / 1;
   min-width: 0;
   width: 100%;
-  border-radius: 10px;
+  border-radius: clamp(16px, 26%, 22px);
   position: relative;
   display: flex;
   align-items: center;
@@ -241,11 +262,11 @@
   user-select: none;
   font-family: inherit;
   outline: none;
-  transition: background-color 0.15s ease,
-              border-color 0.15s ease,
-              box-shadow 0.15s ease,
-              transform 0.15s ease,
-              color 0.15s ease;
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1),
+              box-shadow 0.16s ease,
+              background 0.16s ease,
+              border-color 0.16s ease,
+              color 0.16s ease;
 }
 
 .student-card:focus-visible {
@@ -253,51 +274,73 @@
   outline-offset: 2px;
 }
 
-/* --- Present State (Green Button with White Roll Number) --- */
+/* --- Present State (Green Tactile Matte) --- */
 .student-card--present {
-  background: #34d399;
-  border-color: #34d399;
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(52, 211, 153, 0.3);
+  background: linear-gradient(180deg, #103f35 0%, #082921 100%);
+  border-color: rgba(45, 212, 191, 0.28);
+  color: #2dd4bf;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.5),
+              0 2px 4px rgba(0, 0, 0, 0.4),
+              inset 0 1px 1px rgba(255, 255, 255, 0.1),
+              inset 0 -2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .student-card--present:hover {
-  background: #10b981;
-  border-color: #10b981;
-  box-shadow: 0 4px 14px rgba(52, 211, 153, 0.42);
-  transform: translateY(-1px);
+  background: linear-gradient(180deg, #155447 0%, #0b362c 100%);
+  border-color: rgba(45, 212, 191, 0.48);
+  color: #5eead4;
+  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.6),
+              0 2px 8px rgba(16, 185, 129, 0.2),
+              inset 0 1px 1px rgba(255, 255, 255, 0.15),
+              inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
 }
 
 .student-card--present:active {
-  background: #059669;
-  border-color: #059669;
-  transform: translateY(0) scale(0.97);
+  background: linear-gradient(180deg, #061e18 0%, #092c23 100%);
+  border-color: rgba(45, 212, 191, 0.18);
+  color: #14b8a6;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.75),
+              inset 0 1px 2px rgba(0, 0, 0, 0.85),
+              0 1px 2px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px) scale(0.97);
 }
 
-/* --- Absent State (Red Button with White Roll Number) --- */
+/* --- Absent State (Red Tactile Matte) --- */
 .student-card--absent {
-  background: #f87171;
-  border-color: #f87171;
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(248, 113, 113, 0.3);
+  background: linear-gradient(180deg, #3f1515 0%, #260b0b 100%);
+  border-color: rgba(248, 113, 113, 0.28);
+  color: #f87171;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.5),
+              0 2px 4px rgba(0, 0, 0, 0.4),
+              inset 0 1px 1px rgba(255, 255, 255, 0.1),
+              inset 0 -2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .student-card--absent:hover {
-  background: #ef4444;
-  border-color: #ef4444;
-  box-shadow: 0 4px 14px rgba(248, 113, 113, 0.42);
-  transform: translateY(-1px);
+  background: linear-gradient(180deg, #521c1c 0%, #330f0f 100%);
+  border-color: rgba(248, 113, 113, 0.48);
+  color: #fca5a5;
+  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.6),
+              0 2px 8px rgba(239, 68, 68, 0.2),
+              inset 0 1px 1px rgba(255, 255, 255, 0.15),
+              inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
 }
 
 .student-card--absent:active {
-  background: #dc2626;
-  border-color: #dc2626;
-  transform: translateY(0) scale(0.97);
+  background: linear-gradient(180deg, #1c0606 0%, #260b0b 100%);
+  border-color: rgba(248, 113, 113, 0.18);
+  color: #ef4444;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.75),
+              inset 0 1px 2px rgba(0, 0, 0, 0.85),
+              0 1px 2px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px) scale(0.97);
 }
 
 /* Internal Roll Number Element */
 .student-card-roll {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -306,34 +349,50 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
 @media (max-width: 720px) {
   .student-card-roll {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
   .student-card-roll {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 360px) {
   .student-card-roll {
-    font-size: 0.95rem;
+    font-size: 0.98rem;
   }
 }
 
 .student-card--present .student-card-roll {
-  color: #ffffff;
+  color: #2dd4bf;
+}
+
+.student-card--present:hover .student-card-roll {
+  color: #5eead4;
+}
+
+.student-card--present:active .student-card-roll {
+  color: #14b8a6;
 }
 
 .student-card--absent .student-card-roll {
-  color: #ffffff;
+  color: #f87171;
+}
+
+.student-card--absent:hover .student-card-roll {
+  color: #fca5a5;
+}
+
+.student-card--absent:active .student-card-roll {
+  color: #ef4444;
 }
 
 /* ==========================================================================
@@ -588,16 +647,23 @@
 }
 
 .btn-action--submit {
-  background: var(--accent, #5b4bf0);
-  color: #fff;
-  border-color: var(--accent, #5b4bf0);
-  box-shadow: 0 0 16px rgba(91, 75, 240, 0.35);
+  background: #000000;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
   font-weight: 700;
 }
 
 .btn-action--submit:hover:not(:disabled) {
-  background: #4a3bdc;
-  box-shadow: 0 0 22px rgba(91, 75, 240, 0.55);
+  background: #14151a;
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+}
+
+.btn-action--submit:active:not(:disabled) {
+  background: #000000;
+  transform: translateY(1px) scale(0.98);
 }
 
 .btn-action--absent {

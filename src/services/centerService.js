@@ -91,6 +91,9 @@ export const createCenterOnboarding = async ({ name, email, phone, address }) =>
     return { error: "This account already has a center. You cannot create a second one.", code: "ALREADY_HAS_CENTER", membership: checked.membership, center: ec ?? null };
   }
   if (!name?.trim()) return { error: "Center name is required.", code: "VALIDATION" };
+  if (!email?.trim()) return { error: "Center email is required.", code: "VALIDATION" };
+  if (!/^\S+@\S+\.\S+$/.test(email.trim())) return { error: "Enter a valid email address.", code: "VALIDATION" };
+  if (!phone?.trim()) return { error: "Mobile number is required.", code: "VALIDATION" };
   let slug;
   try {
     slug = await findUniqueSlug(name);

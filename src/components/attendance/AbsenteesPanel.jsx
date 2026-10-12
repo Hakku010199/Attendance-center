@@ -20,7 +20,7 @@ export default function AbsenteesPanel({ absentees = [], onReMarkPresent }) {
               onClick={() => onReMarkPresent(s.id)}
               title={`Click to mark ${s.name} as Present`}
             >
-              <span className="absentee-roll">#{roll}</span>
+              <span className="absentee-roll">{roll}</span>
               <span className="absentee-name">{s.name}</span>
               <span className="absentee-action" aria-hidden="true">✕</span>
             </button>

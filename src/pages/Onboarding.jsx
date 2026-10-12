@@ -15,11 +15,17 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { user, refreshCenter } = useAuth();
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [form, setForm] = useState({ name: "", email: user?.email || "", phone: "", address: "" });
   const [errors, setErrors] = useState({});
   const [slugPreview, setSlugPreview] = useState("");
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    if (user?.email) {
+      setForm((prev) => ({ ...prev, email: prev.email || user.email }));
+    }
+  }, [user?.email]);
 
   useEffect(() => {
     let live = true;
@@ -66,7 +72,16 @@ export default function Onboarding() {
   const validateInfo = () => {
     const e = {};
     if (!form.name.trim()) e.name = "Center name is required.";
-    if (form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email.trim())) e.email = "Please enter a valid email address.";
+    if (!form.email.trim()) {
+      e.email = "Center email is required.";
+    } else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) {
+      e.email = "Please enter a valid email address.";
+    }
+    if (!form.phone.trim()) {
+      e.phone = "Mobile number is required.";
+    } else if (!/^[+\d\s\-()]{7,18}$/.test(form.phone.trim())) {
+      e.phone = "Please enter a valid mobile number.";
+    }
     return e;
   };
 
@@ -109,7 +124,7 @@ export default function Onboarding() {
           </h1>
           <p className="auth-subtitle">
             {step === 0 && "Welcome to Center Portal. Set up your center profile to start managing students and attendance."}
-            {step === 1 && "Tell us about your center. Only the center name is required."}
+            {step === 1 && "Tell us about your center. Center name, email, and mobile number are required."}
             {step === 2 && "Confirm your center details before creating your organization."}
             {step === 3 && "You are now the owner. Let's open your center dashboard."}
           </p>
@@ -154,22 +169,27 @@ export default function Onboarding() {
                 onChange={set("name")}
                 error={errors.name}
                 placeholder="ABC Academy"
+                required
               />
               <Input
                 id="ob-email"
-                label="Center Email"
+                label="Center Email *"
                 type="email"
                 value={form.email}
                 onChange={set("email")}
                 error={errors.email}
                 placeholder="info@abcacademy.com"
+                required
               />
               <Input
                 id="ob-phone"
-                label="Phone"
+                label="Mobile Number *"
+                type="tel"
                 value={form.phone}
                 onChange={set("phone")}
+                error={errors.phone}
                 placeholder="+91 98765 43210"
+                required
               />
               <Input
                 id="ob-addr"
@@ -216,8 +236,8 @@ export default function Onboarding() {
           <div className="onboard-step-content">
             <dl className="review">
               <div><dt>Center Name</dt><dd>{form.name}</dd></div>
-              <div><dt>Center Email</dt><dd>{form.email || "—"}</dd></div>
-              <div><dt>Phone</dt><dd>{form.phone || "—"}</dd></div>
+              <div><dt>Center Email</dt><dd>{form.email}</dd></div>
+              <div><dt>Mobile Number</dt><dd>{form.phone}</dd></div>
               <div><dt>Address</dt><dd>{form.address || "—"}</dd></div>
               <div><dt>Portal Slug</dt><dd><code>{slugPreview || slugify(form.name)}</code></dd></div>
             </dl>
