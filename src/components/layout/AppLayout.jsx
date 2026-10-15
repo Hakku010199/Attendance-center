@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar.jsx";
 import Header from "./Header.jsx";
+import BottomNav from "./BottomNav.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { LoadingScreen } from "../auth/RouteGuards.jsx";
 import { ATTENDANCE_UPDATED, DIVISIONS_UPDATED } from "../../utils/events.js";
@@ -51,6 +52,7 @@ export default function AppLayout({ children }) {
           <Header center={center} user={portalUser} onMenu={() => setOpen(true)} onSignOut={signOut} />
           <main className="content">{children}</main>
         </div>
+        <BottomNav />
       </div>
     </PortalContext.Provider>
   );

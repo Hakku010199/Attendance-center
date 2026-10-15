@@ -123,7 +123,54 @@ CREATE POLICY "members manage own records"
   USING (public.is_center_member(center_id))
   WITH CHECK (public.is_center_member(center_id));
 
--- 9. student_call_logs table policies (if exists)
+-- Enforce single attendance session per division per date per center
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'attendance_sessions_center_div_date_key'
+  ) THEN
+    ALTER TABLE public.attendance_sessions 
+      ADD CONSTRAINT attendance_sessions_center_div_date_key UNIQUE (center_id, division_id, attendance_date);
+  END IF;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
+
+-- Enforce single attendance record per student per session
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'attendance_records_session_student_key'
+  ) THEN
+    ALTER TABLE public.attendance_records 
+      ADD CONSTRAINT attendance_records_session_student_key UNIQUE (session_id, student_id);
+  END IF;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
+
+-- 9. attendance table policies & uniqueness (if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'attendance') THEN
+    ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "members manage own attendance" ON public.attendance;
+    CREATE POLICY "members manage own attendance"
+      ON public.attendance FOR ALL
+      USING (public.is_center_member(center_id))
+      WITH CHECK (public.is_center_member(center_id));
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint WHERE conname = 'attendance_student_date_key'
+    ) THEN
+      ALTER TABLE public.attendance ADD CONSTRAINT attendance_student_date_key UNIQUE (student_id, date);
+    END IF;
+  END IF;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
+
+-- 10. student_call_logs table policies (if exists)
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'student_call_logs') THEN

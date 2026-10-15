@@ -753,3 +753,245 @@
   font-size: 0.8rem;
 }
 
+/* --- Attendance View Mode Header & Toggle --- */
+.attendance-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+.attendance-view-info {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.attendance-view-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--fg, #f3f4f6);
+  text-transform: uppercase;
+}
+
+.attendance-view-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted, #9ca3af);
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--card, #20232d);
+  border: 1px solid var(--border);
+}
+
+.view-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted, #9ca3af);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.view-mode-btn:hover:not(.active) {
+  color: var(--fg, #ffffff);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.view-mode-btn.active {
+  background: #11141c;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 480px) {
+  .view-mode-label {
+    display: none;
+  }
+  .view-mode-btn {
+    padding: 6px 8px;
+  }
+}
+
+/* --- Student Name - Roll Number List View --- */
+.student-list-wrapper {
+  background: var(--card, #20232d);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .student-list-wrapper {
+    padding: 10px 8px;
+    border-radius: 12px;
+  }
+}
+
+.student-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .student-list-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.student-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.student-list-item:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.student-list-item:active {
+  transform: scale(0.985);
+}
+
+/* List Item: Default Green (Present) */
+.student-list-item--present {
+  background: linear-gradient(180deg, #103f35 0%, #082921 100%);
+  border-color: rgba(45, 212, 191, 0.35);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.student-list-item--present:hover {
+  background: linear-gradient(180deg, #155447 0%, #0b362c 100%);
+  border-color: rgba(45, 212, 191, 0.55);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+/* List Item: Turned Red (Absent) */
+.student-list-item--absent {
+  background: linear-gradient(180deg, #3f1515 0%, #260b0b 100%);
+  border-color: rgba(248, 113, 113, 0.35);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.student-list-item--absent:hover {
+  background: linear-gradient(180deg, #521919 0%, #300d0d 100%);
+  border-color: rgba(248, 113, 113, 0.55);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Roll Button in List */
+.student-list-roll-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.15s ease;
+}
+
+.student-list-roll-btn--present {
+  background: rgba(45, 212, 191, 0.18);
+  border-color: rgba(45, 212, 191, 0.5);
+  color: #ffffff;
+}
+
+.student-list-roll-btn--absent {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #ffffff;
+}
+
+/* Name Button in List */
+.student-list-name-btn {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.student-list-name-text {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Status Pill */
+.student-list-status {
+  flex-shrink: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.status-pill--present {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.status-pill--absent {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+

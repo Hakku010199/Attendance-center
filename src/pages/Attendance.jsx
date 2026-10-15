@@ -27,6 +27,7 @@ import {
 import AttendanceFilters from "../components/attendance/AttendanceFilters.jsx";
 import AttendanceSummary from "../components/attendance/AttendanceSummary.jsx";
 import StudentGrid from "../components/attendance/StudentGrid.jsx";
+import StudentList from "../components/attendance/StudentList.jsx";
 import AbsenteesPanel from "../components/attendance/AbsenteesPanel.jsx";
 import SwipeablePhone from "../components/attendance/SwipeablePhone.jsx";
 import "../styles/attendance.css";
@@ -68,6 +69,7 @@ export default function Attendance() {
   });
 
   const [divisionId, setDivisionId] = useState(() => {
+    if (location.state?.divisionId) return location.state.divisionId;
     if (centerId) {
       try {
         const saved = localStorage.getItem(`attendance-selected-division:${centerId}`);
@@ -76,6 +78,37 @@ export default function Attendance() {
     }
     return "";
   });
+
+  // Toggle view mode: "grid" (buttons) vs "list" (name - roll number)
+  const [viewMode, setViewMode] = useState(() => {
+    if (centerId) {
+      try {
+        const saved = localStorage.getItem(`attendance-view-mode:${centerId}`);
+        if (saved === "list" || saved === "grid") return saved;
+      } catch {}
+    }
+    return "grid";
+  });
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    if (centerId) {
+      try {
+        localStorage.setItem(`attendance-view-mode:${centerId}`, mode);
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    if (location.state?.divisionId) {
+      setDivisionId(location.state.divisionId);
+      if (divStorageKey) {
+        try {
+          localStorage.setItem(divStorageKey, location.state.divisionId);
+        } catch {}
+      }
+    }
+  }, [location.state, divStorageKey]);
 
   const handleDateChange = (newDate) => {
     setDate(newDate);
@@ -99,6 +132,7 @@ export default function Attendance() {
 
   // Attendance Dashboard State (for /attendance)
   const [roster, setRoster] = useState([]);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [absentMap, setAbsentMap] = useState(() => {
     if (centerId && date && divisionId) {
       try {
@@ -284,23 +318,23 @@ export default function Attendance() {
     }
 
     try {
-      const { students, absentIds, hasSubmitted } = await getAttendance(date, divisionId);
+      const { students, absentIds, hasSubmitted: dbHasSubmitted } = await getAttendance(date, divisionId);
       setRoster(students || []);
+      setHasSubmitted(Boolean(dbHasSubmitted));
 
-      // 2. If the user hasn't marked or visited this date/division locally yet (localCached === null):
-      if (localCached === null) {
-        if (hasSubmitted) {
-          const dbMap = {};
-          for (const id of (absentIds || [])) dbMap[id] = true;
-          setAbsentMap(dbMap);
-          saveCachedAbsences(date, divisionId, dbMap);
-        } else {
-          setAbsentMap({});
-          saveCachedAbsences(date, divisionId, {});
-        }
-      } else {
-        // Local cache has the user's toggles! Keep them!
+      // 2. If already submitted in database, sync DB state as source of truth:
+      if (dbHasSubmitted) {
+        const dbMap = {};
+        for (const id of (absentIds || [])) dbMap[id] = true;
+        setAbsentMap(dbMap);
+        saveCachedAbsences(date, divisionId, dbMap);
+      } else if (localCached !== null) {
+        // Unsubmitted but previously toggled locally: restore toggles
         setAbsentMap(localCached);
+      } else {
+        // Unsubmitted fresh: default all present (empty absentMap)
+        setAbsentMap({});
+        saveCachedAbsences(date, divisionId, {});
       }
     } catch (err) {
       console.error("[attendance] error loading attendance:", err);
@@ -383,10 +417,13 @@ export default function Attendance() {
       setSubmitNotice({ type: "error", message: res.error });
       toast(res.error, "error");
     } else {
+      const wasResubmit = hasSubmitted;
+      setHasSubmitted(true);
       saveCachedAbsences(date, divisionId, absentMap);
       const absentCount = Object.keys(absentMap).length;
       const presentCount = roster.length - absentCount;
-      const msg = `Attendance submitted successfully for ${roster.length} students (${presentCount} Present, ${absentCount} Absent).`;
+      const actionText = wasResubmit ? "resubmitted" : "submitted";
+      const msg = `Attendance ${actionText} successfully for ${roster.length} students (${presentCount} Present, ${absentCount} Absent).`;
       setSubmitNotice({ type: "success", message: msg });
       toast(msg, "info");
     }
@@ -590,15 +627,56 @@ export default function Attendance() {
         absent={absentCount}
       />
 
-      {/* Student Button Grid (Square Toggle Cards) */}
-      <StudentGrid
-        students={roster}
-        absentMap={absentMap}
-        onToggle={handleToggle}
-        loading={loadingStudents}
-      />
+      {/* View Header with Title & 2-Icon View Mode Toggle */}
+      <div className="attendance-view-header">
+        <div className="attendance-view-info">
+          <span className="attendance-view-title">Students</span>
+          <span className="attendance-view-count">({roster.length})</span>
+        </div>
+        <div className="view-mode-toggle" role="group" aria-label="Toggle student attendance view mode">
+          <button
+            type="button"
+            className={`view-mode-btn ${viewMode === "grid" ? "active" : ""}`}
+            onClick={() => handleViewModeChange("grid")}
+            title="Roll Number Buttons View"
+            aria-label="Roll Number Buttons View"
+            aria-pressed={viewMode === "grid"}
+          >
+            <Icon name="grid" size={16} />
+            <span className="view-mode-label">Buttons</span>
+          </button>
+          <button
+            type="button"
+            className={`view-mode-btn ${viewMode === "list" ? "active" : ""}`}
+            onClick={() => handleViewModeChange("list")}
+            title="Name - Roll Number List View"
+            aria-label="Name - Roll Number List View"
+            aria-pressed={viewMode === "list"}
+          >
+            <Icon name="list" size={16} />
+            <span className="view-mode-label">Name - Roll</span>
+          </button>
+        </div>
+      </div>
 
-      {/* Action Bar (All Present | Submit | All Absent) */}
+      {/* Dynamic Student View: Grid of Roll Buttons OR List of Name - Roll Number */}
+      {viewMode === "grid" ? (
+        <StudentGrid
+          students={roster}
+          absentMap={absentMap}
+          onToggle={handleToggle}
+          loading={loadingStudents}
+        />
+      ) : (
+        <StudentList
+          students={roster}
+          absentMap={absentMap}
+          onToggle={handleToggle}
+          loading={loadingStudents}
+        />
+      )}
+
+      {/* Action Bar (All Present | Submit/Resubmit | All Absent) */}
       <div className="attendance-action-bar">
         <button
           type="button"
@@ -615,7 +693,9 @@ export default function Attendance() {
           onClick={handleSubmit}
           disabled={loadingStudents || submitting || roster.length === 0}
         >
-          {submitting ? "Submitting…" : "Submit Attendance"}
+          {submitting
+            ? (hasSubmitted ? "Resubmitting…" : "Submitting…")
+            : (hasSubmitted ? "Resubmit Attendance" : "Submit Attendance")}
         </button>
 
         <button

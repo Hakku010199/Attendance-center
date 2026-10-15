@@ -5,7 +5,7 @@ export default function StudentCard({ student, isAbsent, onToggle }) {
       type="button"
       className={`student-card ${isAbsent ? "student-card--absent" : "student-card--present"}`}
       onClick={() => onToggle(student.id)}
-      title={`${student.name} (Roll #${roll}) — Click to mark ${isAbsent ? "Present" : "Absent"}`}
+      title={`${student.name} (Roll ${roll}) — Click to mark ${isAbsent ? "Present" : "Absent"}`}
       aria-pressed={!isAbsent}
     >
       <span className="student-card-roll">{roll}</span>

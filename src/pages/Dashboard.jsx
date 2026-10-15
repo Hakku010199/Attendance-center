@@ -1,14 +1,26 @@
+import { useNavigate } from "react-router-dom";
 import StatCard from "../components/common/StatCard.jsx";
 import Async from "../components/common/Async.jsx";
 import { usePortal } from "../components/layout/AppLayout.jsx";
 import useLoad from "../hooks/useLoad.js";
 import { getOverview } from "../services/attendanceService.js";
 
-// Dashboard: Stat cards and Today's Attendance overview.
+// Dashboard: Stat cards, Today's Attendance overview, and Division Status Badges.
 export default function Dashboard() {
-  const { attendanceRefreshKey, divisionsKey } = usePortal();
+  const { center, attendanceRefreshKey, divisionsKey } = usePortal();
+  const navigate = useNavigate();
   const state = useLoad(getOverview, [attendanceRefreshKey, divisionsKey]);
   const date = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const handleDivisionClick = (divId) => {
+    if (center?.id) {
+      try {
+        localStorage.setItem(`attendance-selected-division:${center.id}`, divId);
+      } catch {}
+    }
+    navigate("/attendance", { state: { divisionId: divId } });
+  };
+
   return (
     <>
       <div className="page-head" style={{ justifyContent: "flex-end", marginBottom: "16px" }}>
@@ -16,6 +28,8 @@ export default function Dashboard() {
       </div>
       <Async state={state}>{(o) => {
         const hasStudents = o.total > 0;
+        const divisionList = o.divisionList || [];
+
         return (
           <>
             <div className="stat-grid">
@@ -63,9 +77,40 @@ export default function Dashboard() {
                 </ul>
               </div>
             </section>
+
+            {/* Division Attendance Status: Red badge for Pending, Blue badge for Taken */}
+            <section className="card division-status-card">
+              <div className="division-status-header">
+                <h3 className="division-status-title">Divisions Attendance Status</h3>
+              </div>
+
+              {divisionList.length === 0 ? (
+                <div className="division-status-empty">
+                  <p className="muted">No active divisions found. Create divisions in the Divisions page.</p>
+                </div>
+              ) : (
+                <div className="division-badges-grid">
+                  {divisionList.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      className={`division-status-badge ${
+                        d.attendanceTaken ? "division-status-badge--blue" : "division-status-badge--red"
+                      }`}
+                      onClick={() => handleDivisionClick(d.id)}
+                      title={`${d.name} — Attendance ${d.attendanceTaken ? "Taken" : "Pending"}`}
+                      aria-label={`${d.name}, attendance ${d.attendanceTaken ? "taken" : "pending"}`}
+                    >
+                      <span className="division-badge-name">{d.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
           </>
         );
       }}</Async>
     </>
   );
 }
+

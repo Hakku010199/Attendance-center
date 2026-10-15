@@ -23,21 +23,32 @@ const requireCenterId = async () => {
 const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
 
 const ensureSession = async (center_id, division_id, date) => {
-  const { data: found, error: fErr } = await supabase
+  const { data: found } = await supabase
     .from("attendance_sessions")
     .select("id")
     .eq("center_id", center_id)
     .eq("division_id", division_id)
     .eq("attendance_date", date)
+    .limit(1)
     .maybeSingle();
-  if (fErr) throw fErr;
   if (found) return found.id;
   const { data: created, error: cErr } = await supabase
     .from("attendance_sessions")
     .insert({ center_id, division_id, attendance_date: date })
     .select("id")
     .single();
-  if (cErr) throw cErr;
+  if (cErr) {
+    const { data: retry } = await supabase
+      .from("attendance_sessions")
+      .select("id")
+      .eq("center_id", center_id)
+      .eq("division_id", division_id)
+      .eq("attendance_date", date)
+      .limit(1)
+      .maybeSingle();
+    if (retry) return retry.id;
+    throw cErr;
+  }
   return created.id;
 };
 
@@ -86,23 +97,26 @@ export const getAttendance = async (date, divisionId) => {
 
   // 2. Fallback to attendance_sessions + attendance_records
   let hasSession = false;
-  if (!foundInTable && divisionId && divisionId !== "all") {
+  if (divisionId && divisionId !== "all") {
     const { data: session } = await supabase
       .from("attendance_sessions")
       .select("id")
       .eq("center_id", center_id)
       .eq("division_id", divisionId)
       .eq("attendance_date", date)
+      .limit(1)
       .maybeSingle();
     if (session) {
       hasSession = true;
-      const { data: records, error: rErr } = await supabase
-        .from("attendance_records")
-        .select("student_id, status")
-        .eq("center_id", center_id)
-        .eq("session_id", session.id);
-      if (!rErr && records) {
-        absentIds = records.filter((r) => r.status === "absent").map((r) => r.student_id);
+      if (!foundInTable) {
+        const { data: records, error: rErr } = await supabase
+          .from("attendance_records")
+          .select("student_id, status")
+          .eq("center_id", center_id)
+          .eq("session_id", session.id);
+        if (!rErr && records) {
+          absentIds = records.filter((r) => r.status === "absent").map((r) => r.student_id);
+        }
       }
     }
   }
@@ -253,8 +267,8 @@ export const getOverview = async () => {
   const today = todayISO();
   const [{ data: students }, { data: divisions }, { data: sessions }] = await Promise.all([
     supabase.from("students").select("id").eq("center_id", center_id).eq("status", "active"),
-    supabase.from("divisions").select("id").eq("center_id", center_id).eq("status", "active"),
-    supabase.from("attendance_sessions").select("id").eq("center_id", center_id).eq("attendance_date", today),
+    supabase.from("divisions").select("id, name").eq("center_id", center_id).eq("status", "active").order("name", { ascending: true }),
+    supabase.from("attendance_sessions").select("id, division_id").eq("center_id", center_id).eq("attendance_date", today),
   ]);
   const total = (students ?? []).length;
   let absent = 0;
@@ -268,7 +282,38 @@ export const getOverview = async () => {
     absent = (records ?? []).length;
   }
   const present = Math.max(total - absent, 0);
-  return { total, absent, present, presentPct: pct(present, total), divisions: (divisions ?? []).length, weekly: await weeklyTrend(center_id), activity: [] };
+
+  // Check which divisions have attendance recorded today
+  const completedDivIds = new Set((sessions ?? []).map((s) => s.division_id).filter(Boolean));
+  try {
+    const { data: attData } = await supabase
+      .from("attendance")
+      .select("division_id")
+      .eq("center_id", center_id)
+      .eq("date", today);
+    if (attData && attData.length > 0) {
+      for (const row of attData) {
+        if (row.division_id) completedDivIds.add(row.division_id);
+      }
+    }
+  } catch {}
+
+  const divisionList = (divisions ?? []).map((d) => ({
+    id: d.id,
+    name: d.name,
+    attendanceTaken: completedDivIds.has(d.id),
+  }));
+
+  return {
+    total,
+    absent,
+    present,
+    presentPct: pct(present, total),
+    divisions: (divisions ?? []).length,
+    divisionList,
+    weekly: await weeklyTrend(center_id),
+    activity: [],
+  };
 };
 
 const weeklyTrend = async (center_id) => {

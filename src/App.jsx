@@ -7,6 +7,7 @@ import Students from "./pages/Students.jsx";
 import Attendance from "./pages/Attendance.jsx";
 import Reports from "./pages/Reports.jsx";
 import Settings from "./pages/Settings.jsx";
+import More from "./pages/More.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/daily-attendance" element={<Portal><Attendance /></Portal>} />
       <Route path="/reports" element={<Portal><Reports /></Portal>} />
       <Route path="/settings" element={<Portal><Settings /></Portal>} />
+      <Route path="/more" element={<Portal><More /></Portal>} />
 
       {/* Legacy dashboard path still works */}
       <Route path="/" element={<Portal><Dashboard /></Portal>} />
