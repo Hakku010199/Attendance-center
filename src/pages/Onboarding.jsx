@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Button from "../components/common/Button.jsx";
 import Icon from "../components/common/Icon.jsx";
 import Input from "../components/common/Input.jsx";
+import LoadingIcon from "../components/common/LoadingIcon.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { supabase } from "../lib/supabase.js";
 import { createCenterOnboarding, findUniqueSlug, getCurrentMembership, slugify } from "../services/centerService.js";
+import { isGoogleUser, hasUserSetPassword, setUserPassword } from "../services/authService.js";
 
 const STEPS = ["Welcome", "Center Information", "Review", "Success"];
 
@@ -13,7 +15,7 @@ const STEPS = ["Welcome", "Center Information", "Review", "Success"];
 // Creates centers row, then center_members (owner), then onboarding_completed=true.
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user, refreshCenter } = useAuth();
+  const { user, refreshCenter, signOut } = useAuth();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: "", email: user?.email || "", phone: "", address: "" });
   const [errors, setErrors] = useState({});
@@ -21,11 +23,23 @@ export default function Onboarding() {
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
 
+  // Google user mandatory password setup modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ password: "", confirm: "" });
+  const [pwdErrors, setPwdErrors] = useState({});
+  const [pwdSubmitting, setPwdSubmitting] = useState(false);
+  const [pwdFormError, setPwdFormError] = useState("");
+  const [pwdSuccess, setPwdSuccess] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [currentUser, setCurrentUser] = useState(user);
+
   useEffect(() => {
     if (user?.email) {
       setForm((prev) => ({ ...prev, email: prev.email || user.email }));
+      setCurrentUser((prev) => prev || user);
     }
-  }, [user?.email]);
+  }, [user]);
 
   useEffect(() => {
     let live = true;
@@ -36,12 +50,15 @@ export default function Onboarding() {
         navigate("/login", { replace: true });
         return;
       }
+      setCurrentUser(auth.user);
+
       const { membership } = await getCurrentMembership(auth.user.id);
       if (!live) return;
       if (membership) {
         const { data: c } = await supabase.from("centers").select("*").eq("id", membership.center_id).maybeSingle();
         if (c?.onboarding_completed === true) {
           navigate("/portal", { replace: true });
+          return;
         } else if (c) {
           setForm({
             name: c.name || "",
@@ -52,9 +69,19 @@ export default function Onboarding() {
           setStep(1);
         }
       }
+
+      // Check if user authenticated via Google and has not configured a password yet
+      const isGoogle = isGoogleUser(auth.user);
+      const hasPassword = hasUserSetPassword(auth.user);
+      if (isGoogle && !hasPassword) {
+        setShowPasswordModal(true);
+      } else {
+        setShowPasswordModal(false);
+      }
     })();
     return () => { live = false; };
   }, [navigate]);
+
 
   useEffect(() => {
     let live = true;
@@ -119,9 +146,188 @@ export default function Onboarding() {
     navigate("/portal", { replace: true });
   };
 
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!pwdForm.password) {
+      errs.password = "Password is required.";
+    } else if (pwdForm.password.length < 8) {
+      errs.password = "Password must be at least 8 characters.";
+    }
+    if (!pwdForm.confirm) {
+      errs.confirm = "Please confirm your password.";
+    } else if (pwdForm.confirm !== pwdForm.password) {
+      errs.confirm = "Passwords do not match.";
+    }
+    if (Object.keys(errs).length > 0) {
+      setPwdErrors(errs);
+      return;
+    }
+
+    setPwdSubmitting(true);
+    setPwdFormError("");
+    const res = await setUserPassword(pwdForm.password);
+    setPwdSubmitting(false);
+
+    if (res?.error) {
+      setPwdFormError(res.error);
+      return;
+    }
+
+    if (res.data?.user) {
+      setCurrentUser(res.data.user);
+    }
+    setPwdSuccess("Password set successfully! Continuing to onboarding…");
+    setTimeout(() => {
+      setShowPasswordModal(false);
+    }, 700);
+  };
+
+  const handleSignOutFromModal = async () => {
+    if (signOut) {
+      await signOut();
+    } else {
+      await supabase.auth.signOut();
+    }
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="onboard">
-      <div className="onboard-card">
+      {showPasswordModal && (
+        <div className="onboard-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="pwd-modal-title">
+          <div className="onboard-modal-card">
+            <div className="onboard-modal-badge">
+              <Icon name="google" size={16} />
+              <span>Google Account Security</span>
+            </div>
+
+            <div className="auth-header">
+              <h2 id="pwd-modal-title" className="auth-title" style={{ fontSize: "1.45rem" }}>
+                Set Account Password
+              </h2>
+              <p className="auth-subtitle">
+                To enable signing in with your email and password in addition to Google, please set your password before continuing with onboarding.
+              </p>
+            </div>
+
+            {pwdSuccess ? (
+              <div className="form-success" role="status">
+                <Icon name="check" size={18} />
+                <span>{pwdSuccess}</span>
+              </div>
+            ) : (
+              <form noValidate onSubmit={handlePasswordSubmit} className="auth-form">
+                <Input
+                  id="ob-pwd-email"
+                  label="Registered Email"
+                  type="email"
+                  value={currentUser?.email || user?.email || ""}
+                  readOnly
+                  disabled
+                  icon={<Icon name="mail" size={16} />}
+                />
+
+                <Input
+                  id="ob-new-pwd"
+                  label="New Password *"
+                  type={showPwd ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  value={pwdForm.password}
+                  onChange={(e) => {
+                    setPwdForm({ ...pwdForm, password: e.target.value });
+                    setPwdErrors({ ...pwdErrors, password: undefined });
+                    setPwdFormError("");
+                  }}
+                  error={pwdErrors.password}
+                  icon={<Icon name="lock" size={16} />}
+                  rightSlot={
+                    <button
+                      type="button"
+                      className="pwd-toggle-btn"
+                      onClick={() => setShowPwd(!showPwd)}
+                      title={showPwd ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      <Icon name={showPwd ? "eyeOff" : "eye"} size={16} />
+                    </button>
+                  }
+                  required
+                />
+
+                <Input
+                  id="ob-confirm-pwd"
+                  label="Confirm Password *"
+                  type={showConfirmPwd ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="Re-enter your password"
+                  value={pwdForm.confirm}
+                  onChange={(e) => {
+                    setPwdForm({ ...pwdForm, confirm: e.target.value });
+                    setPwdErrors({ ...pwdErrors, confirm: undefined });
+                    setPwdFormError("");
+                  }}
+                  error={pwdErrors.confirm}
+                  icon={<Icon name="lock" size={16} />}
+                  rightSlot={
+                    <button
+                      type="button"
+                      className="pwd-toggle-btn"
+                      onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                      title={showConfirmPwd ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      <Icon name={showConfirmPwd ? "eyeOff" : "eye"} size={16} />
+                    </button>
+                  }
+                  required
+                />
+
+                {pwdFormError && (
+                  <p className="form-error" role="alert" style={{ marginTop: "4px" }}>
+                    {pwdFormError}
+                  </p>
+                )}
+
+                <div className="onboard-modal-actions">
+                  <button
+                    type="submit"
+                    disabled={pwdSubmitting}
+                    className="btn--auth-primary"
+                    style={{ width: "100%" }}
+                  >
+                    {pwdSubmitting ? (
+                      "Saving password…"
+                    ) : (
+                      <>
+                        <span>Set Password &amp; Continue</span>
+                        <Icon name="arrowRight" size={16} />
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSignOutFromModal}
+                    className="btn--signout-subtle"
+                  >
+                    <Icon name="logout" size={14} />
+                    <span>Sign out instead</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div
+        className="onboard-card"
+        style={showPasswordModal ? { filter: "blur(2px)", pointerEvents: "none", userSelect: "none" } : undefined}
+        aria-hidden={showPasswordModal ? "true" : undefined}
+      >
+
         <div className="auth-header">
           <div className="auth-eyebrow">
             {user?.email ? `Signed in as ${user.email}` : "Center setup wizard"}
@@ -278,7 +484,7 @@ export default function Onboarding() {
 
         {step === 2 && creating && (
           <div className="done" aria-busy="true">
-            <div className="spinner" aria-hidden="true" />
+            <LoadingIcon size={100} />
             <h2 style={{ color: "#fff", marginTop: "12px" }}>Creating your center…</h2>
             <p className="auth-subtitle">Please wait. Do not close or refresh this page.</p>
           </div>

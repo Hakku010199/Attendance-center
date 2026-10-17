@@ -1,9 +1,11 @@
+import LoadingIcon from "../common/LoadingIcon.jsx";
+
 export default function StudentList({ students = [], absentMap = {}, onToggle, loading = false }) {
   if (loading) {
     return (
       <div className="student-list-wrapper">
         <div className="student-grid-loading">
-          <div className="spinner" aria-hidden="true" />
+          <LoadingIcon size={70} />
           <p className="muted">Loading students…</p>
         </div>
       </div>

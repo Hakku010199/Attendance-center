@@ -120,16 +120,49 @@ export const sendPasswordReset = async (email, redirectTo) => {
   }
 };
 
-export const updatePassword = async (newPassword) => {
+export const updatePassword = async (newPassword, extraMetadata = { has_password: true }) => {
   if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
   try {
-    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+      data: extraMetadata,
+    });
     if (error) return { error: friendlyAuthError(error, "Unable to update your password. Please try again."), raw: error };
     return { data };
   } catch (e) {
     return { error: friendlyAuthError(e, "Unable to update your password. Please try again."), raw: e };
   }
 };
+
+export const setUserPassword = async (newPassword) => {
+  return updatePassword(newPassword, {
+    has_password: true,
+    password_set_at: new Date().toISOString(),
+  });
+};
+
+export const isGoogleUser = (user) => {
+  if (!user) return false;
+  const appProvider = user.app_metadata?.provider;
+  const appProviders = user.app_metadata?.providers || [];
+  const identities = user.identities || [];
+  return (
+    appProvider === "google" ||
+    appProviders.includes("google") ||
+    identities.some((id) => id?.provider === "google")
+  );
+};
+
+export const hasUserSetPassword = (user) => {
+  if (!user) return false;
+  // If registered originally with email provider only (not google), they already have a password
+  if (user.app_metadata?.provider === "email" && !isGoogleUser(user)) return true;
+  // Explicitly recorded in metadata
+  if (user.user_metadata?.has_password === true) return true;
+  if (user.user_metadata?.password_set === true) return true;
+  return false;
+};
+
 
 export const CENTER_INACTIVE_MSG = "Center is inactive connect 8139041877.";
 

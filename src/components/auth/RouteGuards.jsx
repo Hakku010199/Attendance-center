@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { isCenterInactive, CENTER_INACTIVE_MSG } from "../../services/authService.js";
+import LoadingIcon from "../common/LoadingIcon.jsx";
 
 export function LoadingScreen() {
   return (
@@ -9,7 +10,7 @@ export function LoadingScreen() {
         <div className="auth-brand"><span className="auth-logo">CP</span></div>
         <h2>Loading your portal…</h2>
         <p className="muted">Checking your session and center.</p>
-        <div className="spinner" aria-hidden="true" />
+        <LoadingIcon size={100} />
       </div>
     </div>
   );

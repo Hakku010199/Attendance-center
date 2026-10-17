@@ -1,11 +1,12 @@
 import StudentCard from "./StudentCard.jsx";
+import LoadingIcon from "../common/LoadingIcon.jsx";
 
 export default function StudentGrid({ students = [], absentMap = {}, onToggle, loading = false }) {
   if (loading) {
     return (
       <div className="student-grid-wrapper">
         <div className="student-grid-loading">
-          <div className="spinner" aria-hidden="true" />
+          <LoadingIcon size={70} />
           <p className="muted">Loading students…</p>
         </div>
       </div>

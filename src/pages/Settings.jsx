@@ -5,7 +5,7 @@ import Input from "../components/common/Input.jsx";
 import { useToast } from "../components/common/Toast.jsx";
 import { usePortal } from "../components/layout/AppLayout.jsx";
 import { updateCenter } from "../services/centerService.js";
-import { sendPasswordReset } from "../services/authService.js";
+import { updatePassword, isGoogleUser, hasUserSetPassword } from "../services/authService.js";
 import { useTheme } from "../context/ThemeContext.jsx";
 import Icon from "../components/common/Icon.jsx";
 
@@ -19,6 +19,17 @@ export default function Settings() {
   const [formError, setFormError] = useState("");
   const set = (k) => (e) => { setV({ ...v, [k]: e.target.value }); setErrors({ ...errors, [k]: undefined }); setFormError(""); };
 
+  const isGoogle = isGoogleUser(authUser);
+  const [passwordConfigured, setPasswordConfigured] = useState(() => hasUserSetPassword(authUser));
+  const [pwd, setPwd] = useState({ password: "", confirm: "" });
+  const [pwdErrors, setPwdErrors] = useState({});
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdFormError, setPwdFormError] = useState("");
+  const [pwdSuccess, setPwdSuccess] = useState("");
+  const [showPasswordSetup, setShowPasswordSetup] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+
   const save = async (e) => {
     e.preventDefault(); setSaving(true); setFormError("");
     const r = await updateCenter(v); setSaving(false);
@@ -27,16 +38,36 @@ export default function Settings() {
     reload(); toast("Center information saved.");
   };
 
-  const resetPassword = async () => {
-    const r = await sendPasswordReset(authUser?.email || user.email);
-    if (r.error) toast(r.error, "error");
-    else toast("Password reset link sent. Check your inbox.");
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!pwd.password) errs.password = "Password is required.";
+    else if (pwd.password.length < 8) errs.password = "Password must be at least 8 characters.";
+    if (!pwd.confirm) errs.confirm = "Please confirm your password.";
+    else if (pwd.confirm !== pwd.password) errs.confirm = "Passwords do not match.";
+    if (Object.keys(errs).length > 0) return setPwdErrors(errs);
+
+    setPwdSaving(true);
+    setPwdFormError("");
+    setPwdSuccess("");
+    const res = await updatePassword(pwd.password);
+    setPwdSaving(false);
+    if (res?.error) {
+      setPwdFormError(res.error);
+      return;
+    }
+    setPasswordConfigured(true);
+    setPwdSuccess("Password saved successfully. You can now log in using either Google or your email and password.");
+    setPwd({ password: "", confirm: "" });
+    toast("Password saved successfully.");
   };
 
   const logout = async () => {
     await signOut();
     navigate("/login", { replace: true });
   };
+
 
   return (
     <>
@@ -113,8 +144,119 @@ export default function Settings() {
         </div>
         <p className="muted">Membership role: <b>{membership?.role ?? "owner"}</b> · Center slug: <code>{center.slug}</code></p>
       </section>
-      <section className="card form"><h3>Security</h3>
-        <div className="page-actions"><Button variant="secondary" onClick={resetPassword}>Send Password Reset Email</Button></div>
+      <section className="card form">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+          <h3 style={{ margin: 0 }}>Security</h3>
+          {isGoogle && (
+            <span className="auth-provider-tag">
+              <Icon name="google" size={14} />
+              <span>Signed in with Google</span>
+            </span>
+          )}
+        </div>
+
+        <div style={{ marginTop: "12px" }}>
+          <p className="muted" style={{ margin: "0 0 12px 0" }}>
+            {passwordConfigured
+              ? (isGoogle
+                  ? "Your account has a password configured. You can sign in using Google or your email and password."
+                  : "Change your account password below.")
+              : "Enable email and password sign-in by setting an account password."}
+          </p>
+
+          {!showPasswordSetup && (
+            <Button
+              type="button"
+              variant={passwordConfigured ? "secondary" : "primary"}
+              onClick={() => setShowPasswordSetup(true)}
+            >
+              {passwordConfigured ? "Change Account Password" : "Set Account Password"}
+            </Button>
+          )}
+
+          {showPasswordSetup && (
+            <form noValidate onSubmit={handleSavePassword} style={{ marginTop: "16px", maxWidth: "420px" }}>
+              {pwdSuccess && (
+                <div className="form-success" role="status" style={{ marginBottom: "12px" }}>
+                  <Icon name="check" size={16} />
+                  <span>{pwdSuccess}</span>
+                </div>
+              )}
+              <div className="form-grid" style={{ gridTemplateColumns: "1fr", gap: "12px" }}>
+                <Input
+                  id="set-pwd"
+                  label="New Password"
+                  type={showPwd ? "text" : "password"}
+                  value={pwd.password}
+                  onChange={(e) => {
+                    setPwd({ ...pwd, password: e.target.value });
+                    setPwdErrors({ ...pwdErrors, password: undefined });
+                    setPwdFormError("");
+                  }}
+                  error={pwdErrors.password}
+                  placeholder="At least 8 characters"
+                  icon={<Icon name="lock" size={16} />}
+                  rightSlot={
+                    <button
+                      type="button"
+                      className="pwd-toggle-btn"
+                      onClick={() => setShowPwd(!showPwd)}
+                      title={showPwd ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      <Icon name={showPwd ? "eyeOff" : "eye"} size={16} />
+                    </button>
+                  }
+                />
+
+                <Input
+                  id="set-confirm"
+                  label="Confirm Password"
+                  type={showConfirmPwd ? "text" : "password"}
+                  value={pwd.confirm}
+                  onChange={(e) => {
+                    setPwd({ ...pwd, confirm: e.target.value });
+                    setPwdErrors({ ...pwdErrors, confirm: undefined });
+                    setPwdFormError("");
+                  }}
+                  error={pwdErrors.confirm}
+                  placeholder="Re-enter password"
+                  icon={<Icon name="lock" size={16} />}
+                  rightSlot={
+                    <button
+                      type="button"
+                      className="pwd-toggle-btn"
+                      onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                      title={showConfirmPwd ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      <Icon name={showConfirmPwd ? "eyeOff" : "eye"} size={16} />
+                    </button>
+                  }
+                />
+              </div>
+
+              {pwdFormError && <p className="form-error" role="alert" style={{ marginTop: "8px" }}>{pwdFormError}</p>}
+
+              <div className="page-actions" style={{ marginTop: "14px", display: "flex", gap: "8px" }}>
+                <Button type="submit" disabled={pwdSaving}>
+                  {pwdSaving ? "Saving..." : passwordConfigured ? "Update Password" : "Save Password"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setShowPasswordSetup(false);
+                    setPwdErrors({});
+                    setPwdFormError("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
       </section>
     </>
   );
