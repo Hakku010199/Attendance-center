@@ -7,7 +7,7 @@ export function LoadingScreen() {
   return (
     <div className="auth-wrap" aria-busy="true">
       <div className="auth-card auth-card--narrow">
-        <div className="auth-brand"><span className="auth-logo">CP</span></div>
+        <div className="auth-brand"><span className="auth-logo">RBC</span></div>
         <h2>Loading your portal…</h2>
         <p className="muted">Checking your session and center.</p>
         <LoadingIcon size={100} />
@@ -19,6 +19,16 @@ export function LoadingScreen() {
 // Public pages: redirect authenticated users to their correct destination.
 export function PublicRoute({ children }) {
   const { loading, isAuthenticated, center, membership } = useAuth();
+
+  // If a recovery link landed on a public route, hold here until the interceptor or ResetPassword processes it
+  if (typeof window !== "undefined") {
+    const hash = window.location.hash || "";
+    const search = window.location.search || "";
+    if (hash.includes("type=recovery") || search.includes("type=recovery")) {
+      return <LoadingScreen />;
+    }
+  }
+
   if (loading) return <LoadingScreen />;
   if (isAuthenticated) {
     if (center && isCenterInactive(center)) return children;

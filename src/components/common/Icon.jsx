@@ -18,6 +18,7 @@ const P = {
   history: <><path d="M4 5v5h5" /><path d="M4.5 10a8 8 0 1 1-.5 4" /><path d="M12 8v4l3 2" /></>,
   download: <path d="M12 4v11m-4-4 4 4 4-4M5 20h14" />,
   check: <path d="m5 12 5 5 9-10" />,
+  checkCircle: <><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></>,
   logout: <><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3" /><path d="m16 17 5-5-5-5M21 12H9" /></>,
   management: <><rect width="20" height="14" x="2" y="7" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
   alert: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,

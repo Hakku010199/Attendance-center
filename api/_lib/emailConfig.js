@@ -1,4 +1,4 @@
-// Central email configuration for Center Portal.
+// Central email configuration for RollBeeCall.
 //
 // Supabase Auth owns ALL tokens, sessions, and confirmation/recovery URLs.
 // Resend ONLY delivers the messages Supabase Auth generates (via Custom SMTP),
@@ -6,9 +6,9 @@
 //
 // Sender logic (no code changes needed when you get a domain):
 //   - Set RESEND_FROM_EMAIL in your server environment (Vercel env vars / .env.local).
-//     Example later: RESEND_FROM_EMAIL="Center Portal <noreply@mydomain.com>"
+//     Example later: RESEND_FROM_EMAIL="RollBeeCall <noreply@rollbeecall.online>"
 //   - Without a custom domain, leave it UNSET to use Resend's test sender:
-//     "Center Portal <onboarding@resend.dev>"
+//     "RollBeeCall <onboarding@resend.dev>"
 //     LIMITATION: resend.dev can ONLY send to the email address you used to
 //     sign up for Resend. Every other recipient will be rejected by Resend.
 //
@@ -32,6 +32,6 @@ const getEnv = (key) => {
 
 // Resolves the sender at runtime. Test sender is the default so the app
 // works before a custom domain is verified.
-export const getResendFrom = () => getEnv(RESEND_FROM_ENV_KEY) || "Center Portal <onboarding@resend.dev>";
+export const getResendFrom = () => getEnv(RESEND_FROM_ENV_KEY) || "rollbeecall.online <onboarding@resend.dev>";
 
 export const isTestSender = (from = getResendFrom()) => String(from).includes("onboarding@resend.dev");

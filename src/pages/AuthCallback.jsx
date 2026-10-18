@@ -6,7 +6,7 @@ import { LoadingScreen } from "../components/auth/RouteGuards.jsx";
 
 // /auth/callback — landing page for Supabase OAuth redirects and email confirmation links.
 // Waits for Supabase to finish processing the exchange code or session
-// before routing to the center portal or onboarding.
+// before routing to the RollBeeCall portal or onboarding.
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -25,9 +25,16 @@ export default function AuthCallback() {
     };
 
     const finish = async () => {
-      // Check for OAuth error params in query or hash (e.g. user cancelled Google consent)
+      // 1. Check if callback is for password recovery
       const searchParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const type = searchParams.get("type") || hashParams.get("type");
+      if (type === "recovery") {
+        navigate(`/reset-password${window.location.search}${window.location.hash}`, { replace: true });
+        return;
+      }
+
+      // Check for OAuth error params in query or hash (e.g. user cancelled Google consent)
       const errCode = searchParams.get("error") || hashParams.get("error");
       const errDesc = searchParams.get("error_description") || hashParams.get("error_description");
       if (errCode || errDesc) {
@@ -57,7 +64,11 @@ export default function AuthCallback() {
     // SIGNED_IN fires when OAuth or magic link establishes its session.
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!live) return;
-      if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session?.user) {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate(`/reset-password${window.location.search}${window.location.hash}`, { replace: true });
+        return;
+      }
+      if (event === "SIGNED_IN" && session?.user) {
         route(session.user.id);
       }
     });
@@ -72,7 +83,7 @@ export default function AuthCallback() {
     return (
       <div className="auth-wrap">
         <div className="auth-card">
-          <div className="auth-brand"><span className="auth-logo">CP</span><div><small>CENTER</small><b>Center Portal</b></div></div>
+          <div className="auth-brand"><span className="auth-logo">RBC</span><div><small>ROLLBEECALL.ONLINE</small><b>rollbeecall.online</b></div></div>
           <h2>Authentication issue</h2>
           <p className="form-error" role="alert">{error}</p>
           <p className="auth-switch"><a href="/login">Back to Login</a></p>

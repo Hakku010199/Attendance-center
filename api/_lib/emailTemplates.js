@@ -7,8 +7,8 @@ const shell = (title, body) => `<!doctype html>
 <body style="margin:0;background:#f5f6fa;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:560px;margin:32px auto;background:#ffffff;border:1px solid #e5e7ef;border-radius:16px;overflow:hidden;">
     <div style="background:#5b4bf0;padding:24px 32px;color:#fff;">
-      <div style="font-size:12px;letter-spacing:2px;opacity:.8;">CENTER</div>
-      <div style="font-size:20px;font-weight:700;">Center Portal</div>
+      <div style="font-size:12px;letter-spacing:2px;opacity:.8;">ROLLBEECALL.ONLINE</div>
+      <div style="font-size:20px;font-weight:700;">rollbeecall.online</div>
     </div>
     <div style="padding:32px;">
       <h2 style="margin:0 0 12px;color:#1c2033;">${title}</h2>
@@ -19,9 +19,9 @@ const shell = (title, body) => `<!doctype html>
 </body></html>`;
 
 export const confirmationTemplate = (confirmUrl) => ({
-  subject: "Confirm your Center Portal account",
+  subject: "Confirm your rollbeecall.online account",
   html: shell(
-    "Welcome to Center Portal",
+    "Welcome to rollbeecall.online",
     `<p style="color:#1c2033;">Your account has been created successfully.</p>
      <p style="color:#1c2033;">Please confirm your email address to continue.</p>
      <p style="margin:24px 0;"><a href="${confirmUrl}" style="display:inline-block;background:#5b4bf0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;">Confirm Email</a></p>
@@ -30,17 +30,17 @@ export const confirmationTemplate = (confirmUrl) => ({
 });
 
 export const recoveryTemplate = (recoveryUrl) => ({
-  subject: "Reset your Center Portal password",
+  subject: "Reset your rollbeecall.online password",
   html: shell(
     "Reset your password",
-    `<p style="color:#1c2033;">We received a request to reset your Center Portal password.</p>
+    `<p style="color:#1c2033;">We received a request to reset your rollbeecall.online password.</p>
      <p style="margin:24px 0;"><a href="${recoveryUrl}" style="display:inline-block;background:#5b4bf0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;">Reset Password</a></p>
      <p style="font-size:12px;color:#6b7285;">Or paste this link into your browser:<br />${recoveryUrl}</p>`
   ),
 });
 
 export const testTemplate = () => ({
-  subject: "Center Portal — Resend test email",
+  subject: "rollbeecall.online — Resend test email",
   html: shell(
     "Resend is connected",
     `<p style="color:#1c2033;">This test email was sent server-side through Resend.</p>

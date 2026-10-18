@@ -27,7 +27,7 @@ export default function Header({ center }) {
     if (path === "/divisions") return "Divisions";
     if (path === "/settings") return "Settings";
     if (path === "/more") return "More";
-    return center?.name || "Center Portal";
+    return center?.name || "rollbeecall.online";
   };
 
   return (

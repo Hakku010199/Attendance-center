@@ -9,7 +9,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
  *   <LoadingIcon src="path/to/animation.lottie" loop autoplay size={100} />
  */
 export default function LoadingIcon({
-  src = "path/to/animation.lottie",
+  src = "/animation.lottie",
   loop = true,
   autoplay = true,
   size = 90,

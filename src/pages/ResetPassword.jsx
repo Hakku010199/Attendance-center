@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Input from "../components/common/Input.jsx";
-import Button from "../components/common/Button.jsx";
+import Icon from "../components/common/Icon.jsx";
 import { updatePassword } from "../services/authService.js";
 import { supabase } from "../lib/supabase.js";
 import { LoadingScreen } from "../components/auth/RouteGuards.jsx";
 
-// /reset-password — opened from the Supabase recovery email.
-// Correct lifecycle: wait for Supabase to process the recovery URL
-// (INITIAL_SESSION empty -> PASSWORD_RECOVERY event -> session ready)
-// BEFORE declaring the link invalid. Only then allow updateUser().
+// /reset-password — opened from the RollBeeCall password recovery email.
+// Correct lifecycle:
+// 1. Checks for error params (e.g., otp_expired).
+// 2. Exchanges PKCE code if ?code= is present.
+// 3. Verifies active session or waits for PASSWORD_RECOVERY event.
+// 4. Opens the password reset modal with New Password and Confirm Password.
+// 5. On submit, updates the password, signs out the recovery session, and redirects to login with confirmation.
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
@@ -19,6 +22,8 @@ export default function ResetPassword() {
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -28,35 +33,80 @@ export default function ResetPassword() {
       if (!live || settled) return;
       settled = true;
       setReady(true);
+      setLinkError("");
     };
-    const markBad = () => {
+
+    const markBad = (msg) => {
       if (!live || settled) return;
       settled = true;
-      setLinkError("This password reset link is invalid or has expired. Please request a new one.");
+      setLinkError(msg || "This password reset link is invalid or has expired. Please request a new one.");
     };
 
-    // Case 1: session already present (page refresh during recovery keeps it).
-    supabase.auth.getSession().then(({ data }) => {
-      if (!live || settled) return;
-      if (data?.session) markReady();
-    });
+    const checkRecovery = async () => {
+      // 1. Check for explicit error parameters in hash or search
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const searchParams = new URLSearchParams(window.location.search);
+      const err = searchParams.get("error") || hashParams.get("error");
+      const errDesc = searchParams.get("error_description") || hashParams.get("error_description");
+      const errCode = searchParams.get("error_code") || hashParams.get("error_code");
 
-    // Case 2: recovery event arrives after Supabase parses the URL hash.
+      if (err || errDesc) {
+        const isExpired = errCode === "otp_expired" || errDesc?.toLowerCase().includes("expired");
+        markBad(isExpired ? "This password reset link has expired. Please request a new one." : (errDesc || "This password reset link is invalid. Please request a new one."));
+        return;
+      }
+
+      // 2. PKCE code exchange if ?code= is present in the URL
+      const code = searchParams.get("code");
+      if (code) {
+        try {
+          const { data, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+          if (!live) return;
+          if (exchangeErr) {
+            markBad(exchangeErr.message || "Unable to verify password reset code. Please request a new one.");
+            return;
+          }
+          if (data?.session) {
+            markReady();
+            return;
+          }
+        } catch (e) {
+          if (!live) return;
+          markBad(e?.message || "Failed to exchange reset code. Please request a new one.");
+          return;
+        }
+      }
+
+      // 3. Check existing session (implicit flow or established session)
+      const { data } = await supabase.auth.getSession();
+      if (!live) return;
+      if (data?.session) {
+        markReady();
+        return;
+      }
+    };
+
+    checkRecovery();
+
+    // 4. Listen for auth state change events
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!live || settled) return;
-      if (event === "PASSWORD_RECOVERY") markReady();
-      else if (event === "SIGNED_IN" && session) markReady();
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        markReady();
+      }
     });
 
-    // Case 3: give Supabase time, then decide. Only show invalid AFTER waiting.
-    const t = setTimeout(() => {
-      if (settled) return;
-      supabase.auth.getSession().then(({ data }) => {
-        if (!live || settled) return;
-        if (data?.session) markReady();
-        else markBad();
-      });
-    }, 2500);
+    // 5. Fallback timer: only mark invalid if no session arrives within 5 seconds
+    const t = setTimeout(async () => {
+      if (!live || settled) return;
+      const { data } = await supabase.auth.getSession();
+      if (!live || settled) return;
+      if (data?.session) {
+        markReady();
+      } else {
+        markBad("This password reset link is invalid or has expired. Please request a new one.");
+      }
+    }, 5000);
 
     return () => {
       live = false;
@@ -84,21 +134,30 @@ export default function ResetPassword() {
     setFormError("");
     const r = await updatePassword(values.password);
     setSubmitting(false);
-    if (r.error) return setFormError(r.error);
-    setSuccess("Your password has been updated successfully. You can now sign in with your new password.");
-    setTimeout(() => navigate("/login", { replace: true }), 2000);
-  };
+    if (r?.error) return setFormError(r.error);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+    setSuccess("Your password has been updated successfully. Redirecting to sign in…");
+
+    // Clean up temporary recovery session and navigate to login
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+
+    setTimeout(() => {
+      navigate("/login", {
+        replace: true,
+        state: { success: "Password reset successful! Please sign in with your new password." },
+      });
+    }, 1600);
+  };
 
   if (linkError) {
     return (
       <div className="auth-wrap">
-        <div className="auth-card">
+        <div className="auth-card" role="alertdialog" aria-modal="true" aria-labelledby="link-err-title">
           <div className="auth-header">
-            <div className="auth-eyebrow">Reset link issue</div>
-            <h1 className="auth-title">Link expired or invalid</h1>
+            <div className="auth-eyebrow">rollbeecall.online</div>
+            <h1 id="link-err-title" className="auth-title">Link expired or invalid</h1>
             <p className="auth-subtitle">This password reset link is invalid or has expired.</p>
           </div>
           <p className="form-error" role="alert">{linkError}</p>
@@ -116,10 +175,10 @@ export default function ResetPassword() {
 
   return (
     <div className="auth-wrap">
-      <div className="auth-card">
+      <div className="auth-card" role="dialog" aria-modal="true" aria-labelledby="reset-title">
         <div className="auth-header">
-          <div className="auth-eyebrow">Secure account</div>
-          <h1 className="auth-title">Set new password</h1>
+          <div className="auth-eyebrow">rollbeecall.online</div>
+          <h1 id="reset-title" className="auth-title">Set new password</h1>
           <p className="auth-subtitle">Enter and confirm your new password below</p>
         </div>
 
@@ -201,7 +260,7 @@ export default function ResetPassword() {
       </div>
 
       <p className="auth-legal">
-        Secured with Supabase Authentication
+        rollbeecall.online • Secure Authentication
       </p>
     </div>
   );

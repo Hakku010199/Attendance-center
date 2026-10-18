@@ -30,7 +30,7 @@ export default function ForgotPassword() {
     <div className="auth-wrap">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="auth-eyebrow">Account recovery</div>
+          <div className="auth-eyebrow">rollbeecall.online</div>
           <h1 className="auth-title">Reset your password</h1>
           <p className="auth-subtitle">Enter your account email to receive a secure password recovery link</p>
         </div>
@@ -77,7 +77,7 @@ export default function ForgotPassword() {
       </div>
 
       <p className="auth-legal">
-        Secured with Supabase Authentication
+        rollbeecall.online • Secure Authentication
       </p>
     </div>
   );

@@ -16,6 +16,7 @@ export default function Login() {
   const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(() => location.state?.error || "");
+  const [successMsg, setSuccessMsg] = useState(() => location.state?.success || "");
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -23,6 +24,7 @@ export default function Login() {
     setValues({ ...values, [k]: e.target.value });
     setErrors({ ...errors, [k]: undefined });
     setFormError("");
+    setSuccessMsg("");
   };
 
   const handleGoogleSignIn = async () => {
@@ -80,6 +82,17 @@ export default function Login() {
             Supabase is not configured. Create a <code>.env</code> file with{" "}
             <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>, then restart the dev server.
           </p>
+        )}
+
+        {successMsg && (
+          <div
+            className="form-success"
+            role="status"
+            style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}
+          >
+            <Icon name="checkCircle" size={18} />
+            <span>{successMsg}</span>
+          </div>
         )}
 
         <div className="auth-social-row">

@@ -1,4 +1,4 @@
-# Email setup — Supabase Auth + Resend (Center Portal)
+# Email setup — Supabase Auth + Resend (RollBeeCall)
 
 Supabase Auth owns ALL tokens, sessions, and confirmation/recovery URLs.
 Resend ONLY delivers the messages. No custom tokens, no custom users table,
@@ -39,8 +39,8 @@ Supabase Dashboard → your project → **Project Settings → Authentication �
 SMTP Settings** → enable **Custom SMTP** and fill in:
 
 - **Sender email:** for now `onboarding@resend.dev`
-  (after verifying a domain, change to `noreply@mydomain.com`)
-- **Sender name:** `Center Portal`
+  (after verifying a domain, change to `noreply@rollbeecall.online`)
+- **Sender name:** `rollbeecall.online`
 - **Host:** `smtp.resend.com`, **Port:** `465`
 - **Username:** `resend`, **Password:** your `re_...` API key
 
@@ -54,15 +54,19 @@ Click **Save**, then **Send test email** to your own address.
 
 Authentication → **URL Configuration**:
 
-- **Site URL:** `http://localhost:5175` (dev) / your Vercel URL (prod)
-- **Redirect URLs (allowlist):** add BOTH
-  - `http://localhost:5175/auth/callback`
-  - `http://localhost:5175/reset-password`
-  - plus the same two paths on your production domain
+- **Site URL:** `https://rollbeecall.online`
+- **Redirect URLs (allowlist):**
+  - `https://rollbeecall.online/**`
+  - `https://rollbeecall.online/auth/callback`
+  - `https://rollbeecall.online/reset-password`
+  - `http://localhost:5173/**`
+  - `http://localhost:5173/auth/callback`
+  - `http://localhost:5173/reset-password`
+  - `http://localhost:5175/**`
 
 ## 5. Disable signup confirmation emails (Registration without email confirmation)
 
-To allow users to register and use Center Portal immediately without needing or waiting for a confirmation email:
+To allow users to register and use RollBeeCall immediately without needing or waiting for a confirmation email:
 
 1. Supabase Dashboard → your project → **Authentication → Providers → Email**.
 2. Under **Email Provider Settings**, find **Confirm email** (Enable email confirmations).
@@ -77,12 +81,12 @@ To allow users to register and use Center Portal immediately without needing or 
 Since signup confirmation emails are disabled, only the **Recovery** template is needed for password resets:
 
 Supabase Dashboard → Authentication → **Email Templates** → **Reset Password** (or **Recovery**):
-- **Subject:** `Reset your Center Portal password`
+- **Subject:** `Reset your rollbeecall.online password`
 - **Body:**
 
 ```html
-<h2>Reset your password</h2>
-<p>We received a request to reset your Center Portal password.</p>
+<h2>Reset your rollbeecall.online password</h2>
+<p>We received a request to reset your rollbeecall.online password.</p>
 <p><a href="{{ .ConfirmationURL }}">Reset Password</a></p>
 <p>If you did not request this, you can safely ignore this email.</p>
 ```
@@ -93,8 +97,8 @@ Supabase Dashboard → Authentication → **Email Templates** → **Reset Passwo
 
 The app reads the sender ONLY in `api/_lib/emailConfig.js`:
 
-- Unset/empty → `Center Portal <onboarding@resend.dev>` (dev/test mode)
-- Later → set server env `RESEND_FROM_EMAIL="Center Portal <noreply@mydomain.com>"`
+- Unset/empty → `rollbeecall.online <onboarding@resend.dev>` (dev/test mode)
+- Later → set server env `RESEND_FROM_EMAIL="rollbeecall.online <noreply@rollbeecall.online>"`
 
 When you verify a domain: update `RESEND_FROM_EMAIL` + the Supabase SMTP
 sender email to match. No application code changes needed.

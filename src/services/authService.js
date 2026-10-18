@@ -68,14 +68,30 @@ export const loginUser = async ({ email, password }) => {
   }
 };
 
+// Resolves application base URL for production custom domain vs local development
+export const getAppBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_SITE_URL || import.meta.env.VITE_APP_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/+$/, "");
+  }
+  if (typeof window !== "undefined" && window.location?.origin) {
+    const origin = window.location.origin;
+    if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      return origin;
+    }
+  }
+  return "https://rollbeecall.online";
+};
+
 // Initiates Google OAuth redirect to /auth/callback
 export const signInWithGoogle = async () => {
   if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
+  const target = `${getAppBaseUrl()}/auth/callback`;
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: target,
       },
     });
     if (error) return { error: friendlyAuthError(error, "Unable to sign in with Google. Please try again."), raw: error };
@@ -106,12 +122,13 @@ export const getSession = async () => {
 
 export const sendPasswordReset = async (email, redirectTo) => {
   if (!isSupabaseConfigured) return { error: SUPABASE_NOT_CONFIGURED_MSG };
+  const target = redirectTo || `${getAppBaseUrl()}/reset-password`;
   try {
     // Supabase Auth generates the recovery token/URL and delivers it through
     // the Resend SMTP provider. Generic errors: never reveal account existence
     // at the service layer — the page shows the generic message on success.
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectTo || `${window.location.origin}/reset-password`,
+      redirectTo: target,
     });
     if (error) return { error: friendlyAuthError(error, "Unable to send reset email. Please check the address and try again."), raw: error };
     return { data };

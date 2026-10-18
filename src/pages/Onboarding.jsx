@@ -339,7 +339,7 @@ export default function Onboarding() {
             {step === 3 && "Center created successfully"}
           </h1>
           <p className="auth-subtitle">
-            {step === 0 && "Welcome to Center Portal. Set up your center profile to start managing students and attendance."}
+            {step === 0 && "Welcome to rollbeecall.online. Set up your center profile to start managing students and attendance."}
             {step === 1 && "Tell us about your center. Center name, email, and mobile number are required."}
             {step === 2 && "Confirm your center details before creating your organization."}
             {step === 3 && "You are now the owner. Let's open your center dashboard."}
@@ -509,7 +509,7 @@ export default function Onboarding() {
       </div>
 
       <p className="auth-legal">
-        Center Portal • Organization Onboarding
+        rollbeecall.online • Organization Onboarding
       </p>
     </div>
   );
