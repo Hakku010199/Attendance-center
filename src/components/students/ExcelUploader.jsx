@@ -118,7 +118,7 @@ export default function ExcelUploader({ onFileParsed, isParsing, parseError }) {
             type="file"
             id="student-file-uploader-input"
             aria-label="Choose student Excel or CSV file"
-            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/comma-separated-values,application/csv"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/comma-separated-values,application/csv,application/octet-stream"
             style={{
               position: "absolute",
               inset: 0,
@@ -128,7 +128,11 @@ export default function ExcelUploader({ onFileParsed, isParsing, parseError }) {
               cursor: "pointer",
               zIndex: 10,
             }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
             onChange={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               if (e.target.files?.[0]) {
                 handleFile(e.target.files[0]);

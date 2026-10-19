@@ -27,8 +27,12 @@ export const findUniqueSlug = async (baseName) => {
 export const getCurrentMembership = async (userId) => {
   let id = userId;
   if (!id) {
-    const { data } = await supabase.auth.getUser();
-    id = data?.user?.id;
+    const { data: sData } = await supabase.auth.getSession();
+    id = sData?.session?.user?.id;
+    if (!id) {
+      const { data } = await supabase.auth.getUser();
+      id = data?.user?.id;
+    }
   }
   if (!id) return { membership: null, error: "Your session has expired. Please log in again." };
   const { data, error } = await supabase
@@ -49,7 +53,7 @@ export const getCurrentCenter = async (userId) => {
   return { center: data ?? null, membership, error: null };
 };
 
-export const getCurrentUserCenter = async () => getCurrentCenter();
+export const getCurrentUserCenter = async (userId) => getCurrentCenter(userId);
 
 export const updateCenter = async (values) => {
   const errors = {};

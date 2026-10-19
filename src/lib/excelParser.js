@@ -52,6 +52,7 @@ export const isSupportedFile = (file) => {
     "text/plain",
     "application/x-csv",
     "application/vnd.oasis.opendocument.spreadsheet",
+    "application/octet-stream",
   ];
   return (
     validExts.some((ext) => name.endsWith(ext)) ||

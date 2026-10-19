@@ -42,7 +42,7 @@ export function PublicRoute({ children }) {
 // Authenticated pages that require a completed center.
 export function ProtectedRoute({ children, from }) {
   const { loading, isAuthenticated, centerLoading, center, membership, signOut } = useAuth();
-  if (loading || centerLoading) return <LoadingScreen />;
+  if (loading || (centerLoading && !center)) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: from || "/portal" }} />;
   if (center && isCenterInactive(center)) {
     if (signOut) signOut();
@@ -55,7 +55,7 @@ export function ProtectedRoute({ children, from }) {
 // Authenticated pages that do NOT require a completed center (onboarding itself).
 export function OnboardingRoute({ children }) {
   const { loading, isAuthenticated, centerLoading, center, membership, signOut } = useAuth();
-  if (loading || centerLoading) return <LoadingScreen />;
+  if (loading || (centerLoading && !center)) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (center && isCenterInactive(center)) {
     if (signOut) signOut();

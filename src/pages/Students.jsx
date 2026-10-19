@@ -205,53 +205,60 @@ export default function Students() {
                 </div>
               )}
             </section>
-            {form && (
-              <Modal title={form.student ? "Edit Student" : "Add Student"} onClose={() => setForm(null)}>
-                <StudentForm
-                  key={formKey}
-                  initial={form.student}
-                  nextNumber={form.nextNumber || nextNumber}
-                  divisions={divisions}
-                  onSave={save}
-                  onCancel={() => setForm(null)}
-                  rollRef={rollRef}
-                />
-              </Modal>
-            )}
-            {smartImportOpen && (
-              <StudentImportModal
-                divisions={activeDivisions(divisions)}
-                onClose={() => setSmartImportOpen(false)}
-                onImportComplete={(s) => {
-                  state.reload();
-                  toast(`Imported ${s.successfullyImported} student${s.successfullyImported === 1 ? "" : "s"}.`);
-                }}
-              />
-            )}
-            {importOpen && <ImportStudentsModal divisions={activeDivisions(divisions)} defaultDivisionId={division} onClose={() => setImportOpen(false)} onImportComplete={onImportComplete} />}
-            {summary && (
-              <Modal title="Import Summary" onClose={() => setSummary(null)}>
-                <div className="stat-grid stat-grid--3">
-                  <div className="stat"><small>Rows read</small><b>{summary.totalRowsRead}</b></div>
-                  <div className="stat"><small>Imported</small><b>{summary.successfullyImported}</b></div>
-                  <div className="stat"><small>Duplicates</small><b>{summary.duplicateRollNumbers}</b></div>
-                  <div className="stat"><small>Invalid</small><b>{summary.invalidRecords}</b></div>
-                  <div className="stat"><small>Skipped</small><b>{summary.skippedRows}</b></div>
-                </div>
-                {summary.issues.length > 0 && (
-                  <div className="table-wrap"><table className="table">
-                    <thead><tr><th>Row</th><th>Roll</th><th>Reason</th></tr></thead>
-                    <tbody>{summary.issues.map((it, i) => (
-                      <tr key={i}><td data-label="Row">{it.rowNumber}</td><td data-label="Roll">{it.rollNumber}</td><td data-label="Reason">{it.reason}</td></tr>
-                    ))}</tbody>
-                  </table></div>
-                )}
-                <div className="modal-actions"><Button onClick={() => setSummary(null)}>Done</Button></div>
-              </Modal>
-            )}
           </>
         );
       }}</Async>
+      {form && (
+        <Modal title={form.student ? "Edit Student" : "Add Student"} onClose={() => setForm(null)}>
+          <StudentForm
+            key={formKey}
+            initial={form.student}
+            nextNumber={form.nextNumber || 1}
+            divisions={divisions}
+            onSave={save}
+            onCancel={() => setForm(null)}
+            rollRef={rollRef}
+          />
+        </Modal>
+      )}
+      {smartImportOpen && (
+        <StudentImportModal
+          divisions={activeDivisions(divisions)}
+          onClose={() => setSmartImportOpen(false)}
+          onImportComplete={(s) => {
+            state.reload();
+            toast(`Imported ${s.successfullyImported} student${s.successfullyImported === 1 ? "" : "s"}.`);
+          }}
+        />
+      )}
+      {importOpen && (
+        <ImportStudentsModal
+          divisions={activeDivisions(divisions)}
+          defaultDivisionId={division}
+          onClose={() => setImportOpen(false)}
+          onImportComplete={onImportComplete}
+        />
+      )}
+      {summary && (
+        <Modal title="Import Summary" onClose={() => setSummary(null)}>
+          <div className="stat-grid stat-grid--3">
+            <div className="stat"><small>Rows read</small><b>{summary.totalRowsRead}</b></div>
+            <div className="stat"><small>Imported</small><b>{summary.successfullyImported}</b></div>
+            <div className="stat"><small>Duplicates</small><b>{summary.duplicateRollNumbers}</b></div>
+            <div className="stat"><small>Invalid</small><b>{summary.invalidRecords}</b></div>
+            <div className="stat"><small>Skipped</small><b>{summary.skippedRows}</b></div>
+          </div>
+          {summary.issues.length > 0 && (
+            <div className="table-wrap"><table className="table">
+              <thead><tr><th>Row</th><th>Roll</th><th>Reason</th></tr></thead>
+              <tbody>{summary.issues.map((it, i) => (
+                <tr key={i}><td data-label="Row">{it.rowNumber}</td><td data-label="Roll">{it.rollNumber}</td><td data-label="Reason">{it.reason}</td></tr>
+              ))}</tbody>
+            </table></div>
+          )}
+          <div className="modal-actions"><Button onClick={() => setSummary(null)}>Done</Button></div>
+        </Modal>
+      )}
       {del && <ConfirmDialog title="Delete Student?" message={`Are you sure you want to delete ${del.name}? Their attendance records will also be removed.`} busy={busy} onConfirm={remove} onCancel={() => setDel(null)} />}
     </>
   );

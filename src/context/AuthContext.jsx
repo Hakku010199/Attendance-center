@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase.js";
 import { getCurrentUserCenter } from "../services/centerService.js";
 import { logoutUser, isCenterInactive, CENTER_INACTIVE_MSG } from "../services/authService.js";
@@ -18,29 +18,43 @@ export function AuthProvider({ children }) {
   const [centerLoading, setCenterLoading] = useState(false);
   const [centerError, setCenterError] = useState("");
 
+  const centerRef = useRef(center);
+  centerRef.current = center;
+
   const loadCenter = useCallback(async (userId) => {
     if (!userId) {
       setCenter(null);
       setMembership(null);
       return { center: null, membership: null };
     }
-    setCenterLoading(true);
-    setCenterError("");
-    const result = await getCurrentUserCenter(userId);
-    if (result.error) {
-      setCenterError(result.error);
-      setCenter(null);
-      setMembership(null);
-    } else if (result.center && isCenterInactive(result.center)) {
-      setCenter(result.center);
-      setMembership(result.membership);
-      setCenterError(CENTER_INACTIVE_MSG);
-    } else {
-      setCenter(result.center);
-      setMembership(result.membership);
+    // Only set centerLoading to true on initial fetch before center is available.
+    // Background revalidations must not trigger full-screen loading screens or tear down UI.
+    if (!centerRef.current) {
+      setCenterLoading(true);
     }
-    setCenterLoading(false);
-    return result;
+    setCenterError("");
+    try {
+      const result = await getCurrentUserCenter(userId);
+      if (result.error) {
+        setCenterError(result.error);
+        // If center is already in memory, preserve it so transient mobile resume glitches
+        // do not wipe out authenticated state and trigger redirects to onboarding/dashboard.
+        if (!centerRef.current) {
+          setCenter(null);
+          setMembership(null);
+        }
+      } else if (result.center && isCenterInactive(result.center)) {
+        setCenter(result.center);
+        setMembership(result.membership);
+        setCenterError(CENTER_INACTIVE_MSG);
+      } else {
+        setCenter(result.center);
+        setMembership(result.membership);
+      }
+      return result;
+    } finally {
+      setCenterLoading(false);
+    }
   }, []);
 
   const refreshCenter = useCallback(async () => {
@@ -63,10 +77,15 @@ export function AuthProvider({ children }) {
       if (!live) return;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         if (nextSession?.user) await loadCenter(nextSession.user.id);
-      }
-      if (event === "SIGNED_OUT") {
+      } else if (event === "TOKEN_REFRESHED") {
+        // TOKEN_REFRESHED occurs when returning from mobile background (e.g. native file picker).
+        // Only load center if it is not already loaded in memory.
+        if (nextSession?.user && !centerRef.current) {
+          await loadCenter(nextSession.user.id);
+        }
+      } else if (event === "SIGNED_OUT") {
         setCenter(null);
         setMembership(null);
         setCenterError("");
