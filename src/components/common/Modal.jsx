@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "./Icon.jsx";
 import Button from "./Button.jsx";
+import { useTheme } from "../../context/ThemeContext.jsx";
 
 export default function Modal({
   title,
@@ -10,6 +11,7 @@ export default function Modal({
   closeOnBackdrop = false,
   children,
 }) {
+  const { theme } = useTheme();
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -28,7 +30,7 @@ export default function Modal({
 
   const modalElement = (
     <div
-      className="backdrop"
+      className={`backdrop ${theme === "light" ? "theme-light" : "theme-dark"}`}
       onClick={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) {
           onCloseRef.current?.();
@@ -36,7 +38,7 @@ export default function Modal({
       }}
     >
       <div
-        className={`modal ${className}`}
+        className={`modal ${theme === "light" ? "modal--light" : "modal--dark"} ${className}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}

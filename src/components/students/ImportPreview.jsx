@@ -64,7 +64,7 @@ export default function ImportPreview({
 
       {/* Division Handling Notice & Optional Fallback Selector */}
       {detectedDivisions.length > 0 ? (
-        <div className="mapping-alert mapping-alert--info" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="mapping-alert mapping-alert--info preview-detected-divisions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: "1.1rem" }}>🏫</span>
           <div>
             <strong>Divisions detected in file:</strong>{" "}
@@ -75,15 +75,15 @@ export default function ImportPreview({
           </div>
         </div>
       ) : (
-        <div className="mapping-alert mapping-alert--warning" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <div>
+        <div className="mapping-alert mapping-alert--warning preview-division-alert">
+          <div className="preview-division-text">
             <strong>No division column detected in this file.</strong>
             <p className="muted" style={{ margin: 0, fontSize: "0.82rem" }}>
               Students will be assigned to a default division.
             </p>
           </div>
           {divisions.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="preview-division-select-wrap">
               <label htmlFor="preview-def-div" style={{ fontSize: "0.84rem", color: "var(--muted)" }}>
                 Assign to:
               </label>
@@ -92,7 +92,6 @@ export default function ImportPreview({
                 className="control control--sm"
                 value={defaultDivisionId}
                 onChange={(e) => onChangeDefaultDivision && onChangeDefaultDivision(e.target.value)}
-                style={{ width: "auto", minWidth: 160 }}
               >
                 <option value="">Auto-create as &quot;General&quot;</option>
                 {divisions.map((d) => (
@@ -118,7 +117,7 @@ export default function ImportPreview({
           <p>Please go back and map at least one column to a student field.</p>
         </div>
       ) : (
-        <div className="table-wrap" style={{ maxHeight: 320, overflowY: "auto" }}>
+        <div className="table-wrap table-wrap--preview">
           <table className="table preview-table">
             <thead>
               <tr>
@@ -131,22 +130,22 @@ export default function ImportPreview({
             <tbody>
               {previewSlice.map((row, idx) => (
                 <tr key={idx}>
-                  <td className="muted" style={{ fontSize: "0.8rem" }}>
+                  <td className="preview-row-num" style={{ fontSize: "0.85rem", color: "#ffffff" }}>
                     {idx + 1}
                   </td>
                   {activeFields.map((f) => {
                     const val = row[f.value];
                     return (
-                      <td key={f.value} data-label={f.label}>
+                      <td key={f.value} data-label={f.label} style={{ color: "#ffffff" }}>
                         {val ? (
                           f.value === "name" ? (
-                            <strong>{val}</strong>
+                            <strong style={{ color: "#ffffff" }}>{val}</strong>
                           ) : f.value === "division" ? (
-                            <span className="status-pill status-pill--active" style={{ fontSize: "0.78rem" }}>
+                            <span className="preview-division-badge" style={{ color: "#ffffff" }}>
                               {val}
                             </span>
                           ) : (
-                            val
+                            <span style={{ color: "#ffffff" }}>{val}</span>
                           )
                         ) : (
                           <span className="muted" style={{ fontStyle: "italic" }}>
@@ -191,8 +190,9 @@ export default function ImportPreview({
           </div>
         )}
 
-        <div className="modal-actions" style={{ marginTop: 16 }}>
+        <div className="modal-actions preview-modal-actions" style={{ marginTop: 16 }}>
           <Button
+            type="button"
             variant="secondary"
             onClick={onRemap}
             disabled={isImporting}
@@ -202,6 +202,7 @@ export default function ImportPreview({
           </Button>
 
           <Button
+            type="button"
             variant="primary"
             onClick={onConfirmImport}
             disabled={isImporting || previewSlice.length === 0 || activeFields.length === 0}
