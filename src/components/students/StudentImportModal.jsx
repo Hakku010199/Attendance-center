@@ -205,26 +205,26 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
 
             {importSummary.issues?.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <h4 style={{ fontSize: "0.9rem", marginBottom: 8, color: "var(--muted)" }}>
+                <h4 style={{ fontSize: "0.9rem", marginBottom: 8, color: "#cbd5e1" }}>
                   Import Exceptions / Skipped Records ({importSummary.issues.length})
                 </h4>
                 <div className="table-wrap" style={{ maxHeight: 180, overflowY: "auto" }}>
                   <table className="table import-issues-table">
                     <thead>
                       <tr>
-                        <th>Row</th>
-                        <th>Roll</th>
-                        <th>Name</th>
-                        <th>Reason</th>
+                        <th style={{ color: "#9ca3af", background: "#202127" }}>Row</th>
+                        <th style={{ color: "#9ca3af", background: "#202127" }}>Roll</th>
+                        <th style={{ color: "#9ca3af", background: "#202127" }}>Name</th>
+                        <th style={{ color: "#9ca3af", background: "#202127" }}>Reason</th>
                       </tr>
                     </thead>
                     <tbody>
                       {importSummary.issues.map((it, i) => (
                         <tr key={i}>
-                          <td data-label="Row">{it.rowNumber}</td>
-                          <td data-label="Roll">{it.rollNumber}</td>
-                          <td data-label="Name">{it.name || "—"}</td>
-                          <td data-label="Reason" style={{ color: "var(--amber, #f59e0b)" }}>
+                          <td data-label="Row" style={{ color: "#ffffff", fontWeight: 600 }}>{it.rowNumber}</td>
+                          <td data-label="Roll" style={{ color: "#ffffff", fontWeight: 600 }}>{it.rollNumber}</td>
+                          <td data-label="Name" style={{ color: "#ffffff", fontWeight: 600 }}>{it.name || "—"}</td>
+                          <td data-label="Reason" style={{ color: "#ffffff", fontWeight: 500 }}>
                             {it.reason}
                           </td>
                         </tr>
@@ -235,8 +235,8 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
               </div>
             )}
 
-            <div className="modal-actions" style={{ marginTop: 24 }}>
-              <Button variant="primary" onClick={onClose}>
+            <div className="modal-actions" style={{ marginTop: 20, marginBottom: 10 }}>
+              <Button variant="primary" onClick={onClose} style={{ minHeight: 46 }}>
                 Done &amp; View Students
               </Button>
             </div>
@@ -251,7 +251,7 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
                 </p>
                 <ExcelUploader onFileParsed={handleFileParsed} parseError={error} />
 
-                <div className="modal-actions" style={{ marginTop: 24 }}>
+                <div className="modal-actions" style={{ marginTop: 20, marginBottom: 10 }}>
                   <Button variant="secondary" onClick={onClose}>
                     Cancel
                   </Button>
@@ -289,7 +289,7 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
                       warnings={aiMetadata.warnings}
                     />
 
-                    <div className="modal-actions" style={{ marginTop: 24 }}>
+                    <div className="modal-actions" style={{ marginTop: 20, marginBottom: 10 }}>
                       <Button variant="secondary" onClick={() => setCurrentStep(1)}>
                         Back to Upload
                       </Button>

@@ -190,7 +190,7 @@ export default function ImportPreview({
           </div>
         )}
 
-        <div className="modal-actions preview-modal-actions" style={{ marginTop: 16 }}>
+        <div className="modal-actions preview-modal-actions" style={{ marginTop: 16, marginBottom: 12 }}>
           <Button
             type="button"
             variant="secondary"

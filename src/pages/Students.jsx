@@ -249,14 +249,14 @@ export default function Students() {
             <div className="stat"><small>Skipped</small><b>{summary.skippedRows}</b></div>
           </div>
           {summary.issues.length > 0 && (
-            <div className="table-wrap"><table className="table">
-              <thead><tr><th>Row</th><th>Roll</th><th>Reason</th></tr></thead>
+            <div className="table-wrap"><table className="table import-issues-table">
+              <thead><tr><th style={{ color: "#9ca3af" }}>Row</th><th style={{ color: "#9ca3af" }}>Roll</th><th style={{ color: "#9ca3af" }}>Reason</th></tr></thead>
               <tbody>{summary.issues.map((it, i) => (
-                <tr key={i}><td data-label="Row">{it.rowNumber}</td><td data-label="Roll">{it.rollNumber}</td><td data-label="Reason">{it.reason}</td></tr>
+                <tr key={i}><td data-label="Row" style={{ color: "#ffffff", fontWeight: 600 }}>{it.rowNumber}</td><td data-label="Roll" style={{ color: "#ffffff", fontWeight: 600 }}>{it.rollNumber}</td><td data-label="Reason" style={{ color: "#ffffff", fontWeight: 500 }}>{it.reason}</td></tr>
               ))}</tbody>
             </table></div>
           )}
-          <div className="modal-actions"><Button onClick={() => setSummary(null)}>Done</Button></div>
+          <div className="modal-actions" style={{ marginTop: 20, marginBottom: 10 }}><Button onClick={() => setSummary(null)}>Done</Button></div>
         </Modal>
       )}
       {del && <ConfirmDialog title="Delete Student?" message={`Are you sure you want to delete ${del.name}? Their attendance records will also be removed.`} busy={busy} onConfirm={remove} onCancel={() => setDel(null)} />}
