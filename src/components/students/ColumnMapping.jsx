@@ -74,10 +74,10 @@ export default function ColumnMapping({
           </span>
           {isAiPowered ? (
             <span className="ai-badge">
-              <Icon name="check" size={13} /> Gemini AI Analyzed
+              <Icon name="check" size={13} /> Auto-Detected
             </span>
           ) : (
-            <span className="ai-badge ai-badge--heuristic">Smart Pattern Detection</span>
+            <span className="ai-badge ai-badge--heuristic">Pattern Matched</span>
           )}
         </div>
       </div>

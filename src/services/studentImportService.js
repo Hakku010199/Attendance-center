@@ -362,7 +362,7 @@ export const requestAiColumnMapping = async (headers, sampleRows) => {
     isAiPowered: false,
     warnings: [
       ...validated.warnings,
-      "AI service endpoint not reachable. Used smart pattern recognition for column mapping.",
+      "Column mappings detected using header and sample pattern recognition.",
     ],
   };
 };

@@ -1,11 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Icon from "./Icon.jsx";
 import Button from "./Button.jsx";
 
-export default function Modal({ title, onClose, className = "", children }) {
+export default function Modal({
+  title,
+  onClose,
+  className = "",
+  closeOnBackdrop = false,
+  children,
+}) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => e.key === "Escape" && onCloseRef.current?.();
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -15,13 +24,15 @@ export default function Modal({ title, onClose, className = "", children }) {
       document.body.style.overflow = prev;
       document.body.classList.remove("modal-open");
     };
-  }, [onClose]);
+  }, []);
 
   const modalElement = (
     <div
       className="backdrop"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (closeOnBackdrop && e.target === e.currentTarget) {
+          onCloseRef.current?.();
+        }
       }}
     >
       <div
@@ -30,10 +41,12 @@ export default function Modal({ title, onClose, className = "", children }) {
         aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
       >
         <div className="modal-head">
           <h2>{title}</h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+          <button type="button" className="icon-btn" onClick={() => onCloseRef.current?.()} aria-label="Close">
             <Icon name="close" />
           </button>
         </div>

@@ -129,6 +129,7 @@ export default function ExcelUploader({ onFileParsed, isParsing, parseError }) {
               zIndex: 10,
             }}
             onChange={(e) => {
+              e.stopPropagation();
               if (e.target.files?.[0]) {
                 handleFile(e.target.files[0]);
               }
@@ -158,7 +159,16 @@ export default function ExcelUploader({ onFileParsed, isParsing, parseError }) {
               <strong className="uploader-file-name">{selectedFile.name}</strong>
               <small className="muted">{formatFileSize(selectedFile.size)}</small>
             </div>
-            <Button variant="ghost-danger" size="sm" onClick={resetFile} title="Choose different file">
+            <Button
+              type="button"
+              variant="ghost-danger"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                resetFile();
+              }}
+              title="Choose different file"
+            >
               Remove
             </Button>
           </div>

@@ -117,8 +117,9 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
 
   return (
     <Modal
-      title="Smart Student Import (AI-Assisted)"
+      title="Import Students"
       onClose={onClose}
+      closeOnBackdrop={false}
       className="student-import-modal"
     >
       <div className="import-wizard">
@@ -246,8 +247,7 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
             {currentStep === 1 && (
               <div className="import-step-body">
                 <p className="muted" style={{ marginBottom: 16 }}>
-                  Upload any student spreadsheet (.xlsx, .xls, .csv). Different centers use different
-                  formats — Gemini AI will automatically detect and match column headers.
+                  Upload any student spreadsheet (.xlsx, .xls, .csv). Column headers will be automatically detected and mapped to student fields.
                 </p>
                 <ExcelUploader onFileParsed={handleFileParsed} parseError={error} />
 
@@ -260,19 +260,19 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
                     disabled={!fileData || !fileData.headers?.length}
                     onClick={handleStartMapping}
                   >
-                    Analyze Columns with AI <Icon name="chevron" size={14} />
+                    Match Columns <Icon name="chevron" size={14} />
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* STEP 2: AI Column Mapping & Review */}
+            {/* STEP 2: Column Mapping & Review */}
             {currentStep === 2 && (
               <div className="import-step-body">
                 {isAiAnalyzing ? (
                   <div className="empty" style={{ padding: "48px 16px" }}>
                     <div className="spinner" />
-                    <strong style={{ display: "block", marginTop: 14 }}>Analyzing Excel Columns with Gemini...</strong>
+                    <strong style={{ display: "block", marginTop: 14 }}>Analyzing Excel Columns...</strong>
                     <p className="muted">Evaluating column headers and sample data to identify student fields.</p>
                   </div>
                 ) : (
