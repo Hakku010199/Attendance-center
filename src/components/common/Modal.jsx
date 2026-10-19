@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "./Icon.jsx";
 import Button from "./Button.jsx";
 
-export default function Modal({ title, onClose, children }) {
+export default function Modal({ title, onClose, className = "", children }) {
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -15,14 +16,36 @@ export default function Modal({ title, onClose, children }) {
       document.body.classList.remove("modal-open");
     };
   }, [onClose]);
-  return (
-    <div className="backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="modal-head"><h2>{title}</h2><button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="close" /></button></div>
+
+  const modalElement = (
+    <div
+      className="backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className={`modal ${className}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-head">
+          <h2>{title}</h2>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+            <Icon name="close" />
+          </button>
+        </div>
         <div className="modal-body">{children}</div>
       </div>
     </div>
   );
+
+  if (typeof document !== "undefined") {
+    return createPortal(modalElement, document.body);
+  }
+  return modalElement;
 }
 
 // Backwards-compatible simple confirm (message + optional error).

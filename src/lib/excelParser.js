@@ -41,7 +41,24 @@ export const formatFileSize = (bytes) => {
 export const isSupportedFile = (file) => {
   if (!file) return false;
   const name = String(file.name || "").toLowerCase();
-  return name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv");
+  const type = String(file.type || "").toLowerCase();
+  const validExts = [".xlsx", ".xls", ".csv"];
+  const validMimes = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+    "text/csv",
+    "application/csv",
+    "text/comma-separated-values",
+    "text/plain",
+    "application/x-csv",
+    "application/vnd.oasis.opendocument.spreadsheet",
+  ];
+  return (
+    validExts.some((ext) => name.endsWith(ext)) ||
+    validMimes.some((m) => type.includes(m)) ||
+    type.includes("spreadsheet") ||
+    type.includes("excel")
+  );
 };
 
 /**

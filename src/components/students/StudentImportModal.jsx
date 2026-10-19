@@ -12,9 +12,9 @@ import {
 import { transformRows } from "../../lib/excelParser.js";
 
 const STEPS = [
-  { id: 1, label: "1. Upload File" },
-  { id: 2, label: "2. Map Columns" },
-  { id: 3, label: "3. Preview Data" },
+  { id: 1, label: "1. Upload File", short: "1. Upload" },
+  { id: 2, label: "2. Map Columns", short: "2. Map" },
+  { id: 3, label: "3. Preview Data", short: "3. Preview" },
 ];
 
 export default function StudentImportModal({ divisions = [], onClose, onImportComplete }) {
@@ -131,7 +131,8 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
                 className={`import-step-item ${currentStep === s.id ? "import-step-item--active" : ""} ${currentStep > s.id ? "import-step-item--done" : ""}`}
               >
                 <span className="import-step-num">{currentStep > s.id ? "✓" : s.id}</span>
-                <span className="import-step-text">{s.label}</span>
+                <span className="import-step-text import-step-text--full">{s.label}</span>
+                <span className="import-step-text import-step-text--short">{s.short}</span>
               </div>
             ))}
           </div>
@@ -207,7 +208,7 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
                   Import Exceptions / Skipped Records ({importSummary.issues.length})
                 </h4>
                 <div className="table-wrap" style={{ maxHeight: 180, overflowY: "auto" }}>
-                  <table className="table">
+                  <table className="table import-issues-table">
                     <thead>
                       <tr>
                         <th>Row</th>

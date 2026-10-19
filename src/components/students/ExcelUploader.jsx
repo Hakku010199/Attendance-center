@@ -111,31 +111,42 @@ export default function ExcelUploader({ onFileParsed, isParsing, parseError }) {
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              fileInputRef.current?.click();
-            }
-          }}
+          style={{ position: "relative" }}
         >
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls,.csv"
-            style={{ display: "none" }}
-            onChange={(e) => handleFile(e.target.files?.[0])}
+            id="student-file-uploader-input"
+            aria-label="Choose student Excel or CSV file"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/comma-separated-values,application/csv"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              opacity: 0,
+              cursor: "pointer",
+              zIndex: 10,
+            }}
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                handleFile(e.target.files[0]);
+              }
+            }}
           />
-          <div className="uploader-icon-wrap">
+          <div className="uploader-icon-wrap" style={{ pointerEvents: "none" }}>
             <Icon name="download" size={32} />
           </div>
-          <div className="uploader-text">
-            <strong>Drag and drop student Excel or CSV file</strong>
-            <span>or click to browse from your computer</span>
+          <div className="uploader-text" style={{ pointerEvents: "none" }}>
+            <strong>Choose student Excel or CSV file</strong>
+            <span>Tap to browse from your device or drag &amp; drop</span>
           </div>
-          <div className="uploader-badge">Supports .xlsx, .xls, .csv</div>
+          <div style={{ marginTop: 12, pointerEvents: "none" }}>
+            <span className="btn btn--secondary btn--sm" style={{ pointerEvents: "none" }}>
+              <Icon name="search" size={14} /> Browse Device
+            </span>
+          </div>
+          <div className="uploader-badge" style={{ pointerEvents: "none" }}>Supports .xlsx, .xls, .csv</div>
         </div>
       ) : (
         <div className="uploader-selected-card">
