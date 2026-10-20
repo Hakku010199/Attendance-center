@@ -5,7 +5,7 @@ export default function AbsenteesPanel({ absentees = [], onReMarkPresent }) {
     <div className="absentees-panel">
       <div className="absentees-header">
         <span className="absentees-title">
-          Absent Students ({absentees.length})
+          Absent Students
         </span>
         <small className="muted">Click any student chip to mark them back to Present</small>
       </div>

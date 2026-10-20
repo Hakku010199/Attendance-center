@@ -262,6 +262,8 @@
   user-select: none;
   font-family: inherit;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1),
               box-shadow 0.16s ease,
               background 0.16s ease,
@@ -269,9 +271,10 @@
               color 0.16s ease;
 }
 
+.student-card:focus,
 .student-card:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
+  outline: none !important;
+  box-shadow: none;
 }
 
 /* --- Present State (Green Tactile Matte) --- */
@@ -280,29 +283,24 @@
   border-color: rgba(45, 212, 191, 0.28);
   color: #2dd4bf;
   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.5),
-              0 2px 4px rgba(0, 0, 0, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.1),
-              inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+              0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-.student-card--present:hover {
-  background: linear-gradient(180deg, #155447 0%, #0b362c 100%);
-  border-color: rgba(45, 212, 191, 0.48);
-  color: #5eead4;
-  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.6),
-              0 2px 8px rgba(16, 185, 129, 0.2),
-              inset 0 1px 1px rgba(255, 255, 255, 0.15),
-              inset 0 -2px 4px rgba(0, 0, 0, 0.35);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .student-card--present:hover {
+    background: linear-gradient(180deg, #155447 0%, #0b362c 100%);
+    border-color: rgba(45, 212, 191, 0.48);
+    color: #5eead4;
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
+  }
 }
 
 .student-card--present:active {
   background: linear-gradient(180deg, #061e18 0%, #092c23 100%);
   border-color: rgba(45, 212, 191, 0.18);
   color: #14b8a6;
-  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.75),
-              inset 0 1px 2px rgba(0, 0, 0, 0.85),
-              0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transform: translateY(1px) scale(0.97);
 }
 
@@ -312,29 +310,24 @@
   border-color: rgba(248, 113, 113, 0.28);
   color: #f87171;
   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.5),
-              0 2px 4px rgba(0, 0, 0, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.1),
-              inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+              0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-.student-card--absent:hover {
-  background: linear-gradient(180deg, #521c1c 0%, #330f0f 100%);
-  border-color: rgba(248, 113, 113, 0.48);
-  color: #fca5a5;
-  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.6),
-              0 2px 8px rgba(239, 68, 68, 0.2),
-              inset 0 1px 1px rgba(255, 255, 255, 0.15),
-              inset 0 -2px 4px rgba(0, 0, 0, 0.35);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .student-card--absent:hover {
+    background: linear-gradient(180deg, #521c1c 0%, #330f0f 100%);
+    border-color: rgba(248, 113, 113, 0.48);
+    color: #fca5a5;
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
+  }
 }
 
 .student-card--absent:active {
   background: linear-gradient(180deg, #1c0606 0%, #260b0b 100%);
   border-color: rgba(248, 113, 113, 0.18);
   color: #ef4444;
-  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.75),
-              inset 0 1px 2px rgba(0, 0, 0, 0.85),
-              0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transform: translateY(1px) scale(0.97);
 }
 
@@ -807,11 +800,20 @@
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
-.view-mode-btn:hover:not(.active) {
-  color: var(--fg, #ffffff);
-  background: rgba(255, 255, 255, 0.05);
+.view-mode-btn:focus,
+.view-mode-btn:focus-visible {
+  outline: none !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .view-mode-btn:hover:not(.active) {
+    color: var(--fg, #ffffff);
+    background: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .view-mode-btn.active {
@@ -867,13 +869,14 @@
   border: 1px solid transparent;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
   outline: none;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.student-list-item:focus,
 .student-list-item:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
+  outline: none !important;
 }
 
 .student-list-item:active {
@@ -884,26 +887,28 @@
 .student-list-item--present {
   background: linear-gradient(180deg, #103f35 0%, #082921 100%);
   border-color: rgba(45, 212, 191, 0.35);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
-.student-list-item--present:hover {
-  background: linear-gradient(180deg, #155447 0%, #0b362c 100%);
-  border-color: rgba(45, 212, 191, 0.55);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .student-list-item--present:hover {
+    background: linear-gradient(180deg, #155447 0%, #0b362c 100%);
+    border-color: rgba(45, 212, 191, 0.55);
+  }
 }
 
 /* List Item: Turned Red (Absent) */
 .student-list-item--absent {
   background: linear-gradient(180deg, #3f1515 0%, #260b0b 100%);
   border-color: rgba(248, 113, 113, 0.35);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
-.student-list-item--absent:hover {
-  background: linear-gradient(180deg, #521919 0%, #300d0d 100%);
-  border-color: rgba(248, 113, 113, 0.55);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .student-list-item--absent:hover {
+    background: linear-gradient(180deg, #521919 0%, #300d0d 100%);
+    border-color: rgba(248, 113, 113, 0.55);
+  }
 }
 
 /* Roll Button in List */
@@ -921,7 +926,14 @@
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   border: 1px solid;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
   transition: all 0.15s ease;
+}
+
+.student-list-roll-btn:focus,
+.student-list-roll-btn:focus-visible {
+  outline: none !important;
 }
 
 .student-list-roll-btn--present {
@@ -992,6 +1004,100 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+}
+
+/* ==========================================================================
+   Mobile Attendance Buttons: Remove light reflection, tap highlight, and glow
+   ========================================================================== */
+@media (max-width: 768px), (hover: none) {
+  .student-card,
+  .student-card:hover,
+  .student-card:focus,
+  .student-card:focus-visible,
+  .student-card:active {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  .student-card--present,
+  .student-card--present:hover,
+  .student-card--present:focus,
+  .student-card--present:focus-visible {
+    background: linear-gradient(180deg, #103f35 0%, #082921 100%) !important;
+    border-color: rgba(45, 212, 191, 0.28) !important;
+    color: #2dd4bf !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45) !important;
+    transform: none !important;
+    outline: none !important;
+  }
+
+  .student-card--present:active {
+    background: #082921 !important;
+    border-color: rgba(45, 212, 191, 0.22) !important;
+    color: #14b8a6 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    transform: scale(0.96) !important;
+  }
+
+  .student-card--absent,
+  .student-card--absent:hover,
+  .student-card--absent:focus,
+  .student-card--absent:focus-visible {
+    background: linear-gradient(180deg, #3f1515 0%, #260b0b 100%) !important;
+    border-color: rgba(248, 113, 113, 0.28) !important;
+    color: #f87171 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45) !important;
+    transform: none !important;
+    outline: none !important;
+  }
+
+  .student-card--absent:active {
+    background: #260b0b !important;
+    border-color: rgba(248, 113, 113, 0.22) !important;
+    color: #ef4444 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    transform: scale(0.96) !important;
+  }
+
+  .student-card-roll {
+    text-shadow: none !important;
+  }
+
+  .student-list-item,
+  .student-list-roll-btn,
+  .student-list-name-btn,
+  .view-mode-btn {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+  }
+
+  .student-list-item:focus,
+  .student-list-item:focus-visible,
+  .student-list-item:active,
+  .student-list-roll-btn:focus,
+  .student-list-roll-btn:focus-visible,
+  .student-list-name-btn:focus,
+  .student-list-name-btn:focus-visible,
+  .view-mode-btn:focus,
+  .view-mode-btn:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .student-list-item--present,
+  .student-list-item--present:hover {
+    background: linear-gradient(180deg, #103f35 0%, #082921 100%) !important;
+    border-color: rgba(45, 212, 191, 0.35) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  .student-list-item--absent,
+  .student-list-item--absent:hover {
+    background: linear-gradient(180deg, #3f1515 0%, #260b0b 100%) !important;
+    border-color: rgba(248, 113, 113, 0.35) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+  }
 }
 
 

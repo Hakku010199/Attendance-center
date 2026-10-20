@@ -206,7 +206,7 @@ export default function StudentImportModal({ divisions = [], onClose, onImportCo
             {importSummary.issues?.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <h4 style={{ fontSize: "0.9rem", marginBottom: 8, color: "#cbd5e1" }}>
-                  Import Exceptions / Skipped Records ({importSummary.issues.length})
+                  Import Exceptions / Skipped Records
                 </h4>
                 <div className="table-wrap" style={{ maxHeight: 180, overflowY: "auto" }}>
                   <table className="table import-issues-table">

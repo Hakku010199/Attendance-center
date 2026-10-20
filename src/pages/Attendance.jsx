@@ -631,7 +631,6 @@ export default function Attendance() {
       <div className="attendance-view-header">
         <div className="attendance-view-info">
           <span className="attendance-view-title">Students</span>
-          <span className="attendance-view-count">({roster.length})</span>
         </div>
         <div className="view-mode-toggle" role="group" aria-label="Toggle student attendance view mode">
           <button

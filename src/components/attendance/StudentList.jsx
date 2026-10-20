@@ -67,15 +67,6 @@ export default function StudentList({ students = [], absentMap = {}, onToggle, l
               >
                 <span className="student-list-name-text">{student.name}</span>
               </button>
-
-              {isAbsent && (
-                <div className="student-list-status">
-                  <span className="status-pill status-pill--absent">
-                    <span className="status-dot" aria-hidden="true" />
-                    Absent
-                  </span>
-                </div>
-              )}
             </div>
           );
         })}
