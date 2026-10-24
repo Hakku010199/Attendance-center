@@ -1,11 +1,15 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout.jsx";
-import { OnboardingRoute, ProtectedRoute, PublicRoute } from "./components/auth/RouteGuards.jsx";
+import FacultyLayout from "./components/layout/FacultyLayout.jsx";
+import { OnboardingRoute, ProtectedRoute, PublicRoute, FacultyRoute } from "./components/auth/RouteGuards.jsx";
+import PortalSelector from "./pages/PortalSelector.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Divisions from "./pages/Divisions.jsx";
 import Students from "./pages/Students.jsx";
+import Teachers from "./pages/Teachers.jsx";
 import Attendance from "./pages/Attendance.jsx";
+import FacultyLogin from "./pages/FacultyLogin.jsx";
 import Reports from "./pages/Reports.jsx";
 import Settings from "./pages/Settings.jsx";
 import More from "./pages/More.jsx";
@@ -72,19 +76,36 @@ export default function App() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
 
-      {/* Canonical dashboard route */}
+      {/* Portal Selection entry screen */}
+      <Route path="/" element={<PortalSelector />} />
+
+      {/* Dedicated Faculty Login screen */}
+      <Route path="/faculty/login" element={<FacultyLogin />} />
+
+      {/* Faculty Portal: Attendance Marking Option Only */}
+      <Route
+        path="/faculty"
+        element={
+          <FacultyRoute>
+            <FacultyLayout>
+              <Attendance isFaculty={true} />
+            </FacultyLayout>
+          </FacultyRoute>
+        }
+      />
+
+      {/* Canonical center dashboard and management routes */}
       <Route path="/portal" element={<Portal><Dashboard /></Portal>} />
       <Route path="/divisions" element={<Portal><Divisions /></Portal>} />
       <Route path="/students" element={<Portal><Students /></Portal>} />
+      <Route path="/teachers" element={<Portal><Teachers /></Portal>} />
       <Route path="/attendance" element={<Portal><Attendance /></Portal>} />
       <Route path="/daily-attendance" element={<Portal><Attendance /></Portal>} />
       <Route path="/reports" element={<Portal><Reports /></Portal>} />
       <Route path="/settings" element={<Portal><Settings /></Portal>} />
       <Route path="/more" element={<Portal><More /></Portal>} />
 
-      {/* Legacy dashboard path still works */}
-      <Route path="/" element={<Portal><Dashboard /></Portal>} />
-      <Route path="*" element={<Navigate to="/portal" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </>
   );

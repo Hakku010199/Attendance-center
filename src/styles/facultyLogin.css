@@ -1,0 +1,419 @@
+/* ==========================================================================
+   Faculty Login Page Styles
+   Matching the Center Portal & Attendance Page Dark Color Palette
+   ========================================================================== */
+.faculty-auth-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background-color: #08090d;
+  background-image:
+    radial-gradient(ellipse 800px 500px at 50% 0%, rgba(30, 41, 59, 0.4) 0%, transparent 75%),
+    radial-gradient(circle at 85% 85%, rgba(200, 243, 29, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.08) 0%, transparent 40%);
+  color: #f8fafc;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Back button — fixed top-left corner */
+.faculty-auth-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.faculty-auth-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 7px 14px;
+  transition: all 0.18s ease;
+  pointer-events: all;
+  backdrop-filter: blur(8px);
+}
+
+.faculty-auth-back-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateX(-2px);
+}
+
+.faculty-auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #111217;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 36px 30px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.faculty-auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #c8f31d, #2563eb);
+}
+
+/* Legacy back link (kept for compat, hidden now) */
+.faculty-auth-back-link {
+  display: none;
+}
+
+.faculty-auth-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.faculty-auth-badge {
+  width: 44px;
+  height: 44px;
+  background-color: #c8f31d;
+  color: #0b1b2b;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 14px rgba(200, 243, 29, 0.25);
+}
+
+.faculty-auth-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c8f31d;
+  margin-bottom: 4px;
+}
+
+.faculty-auth-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.faculty-auth-subtitle {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.faculty-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faculty-auth-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* Remember Me Checkbox */
+.faculty-auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: -4px;
+}
+
+.faculty-auth-remember input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.faculty-auth-remember input[type="checkbox"]:checked {
+  background: #c8f31d;
+  border-color: #c8f31d;
+}
+
+.faculty-auth-remember input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 6px;
+  height: 10px;
+  border: 2px solid #0b1b2b;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.faculty-auth-remember input[type="checkbox"]:focus-visible {
+  outline: 2px solid #c8f31d;
+  outline-offset: 2px;
+}
+
+.faculty-auth-remember span {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.faculty-auth-submit-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  background: #c8f31d;
+  color: #0b1b2b;
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 6px;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(200, 243, 29, 0.25);
+}
+
+.faculty-auth-submit-btn:hover:not(:disabled) {
+  background: #d6fa3d;
+  box-shadow: 0 6px 18px rgba(200, 243, 29, 0.4);
+  transform: translateY(-1px);
+}
+
+.faculty-auth-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.faculty-auth-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .faculty-auth-card {
+    padding: 28px 20px;
+    border-radius: 20px;
+    margin-top: 16px;
+  }
+  .faculty-auth-title {
+    font-size: 1.4rem;
+  }
+  .faculty-auth-topbar {
+    padding: 10px 12px;
+  }
+}
+
+/* ==============================================================================
+   Faculty Login Credentials Modal & Time Warning Box
+   ============================================================================== */
+.faculty-time-warning-box {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 14px;
+  padding: 18px 16px;
+  color: #fde68a;
+  text-align: left;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faculty-time-warning-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.faculty-time-warning-header svg {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.faculty-time-warning-desc {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #fef3c7;
+  margin: 0;
+  opacity: 0.95;
+}
+
+.faculty-time-warning-center {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.faculty-time-warning-center strong {
+  color: #ffffff;
+}
+
+.faculty-time-warning-center span {
+  color: #94a3b8;
+}
+
+.faculty-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+.faculty-modal-content {
+  background: #111217;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 24px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.8);
+  position: relative;
+  animation: scaleInModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleInModal {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.faculty-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.faculty-modal-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.faculty-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.faculty-modal-subtitle {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.faculty-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.faculty-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+.faculty-center-confirmed-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(99, 85, 246, 0.15);
+  border: 1px solid rgba(99, 85, 246, 0.3);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #c7d2fe;
+  margin-bottom: 16px;
+}
+
+

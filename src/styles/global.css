@@ -58,6 +58,8 @@ button.nav-link{width:100%;border:0;background:transparent;cursor:pointer;text-a
 .page-actions{display:flex;align-items:center;gap:10px}
 .page-head h2{font-size:1.45rem;color:#fff}.page-head p{margin-top:4px;color:var(--muted);font-size:.9rem}
 .date-chip{display:inline-block;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.85rem;color:var(--muted)}
+.center-no-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:rgba(99,85,246,.16);border:1px solid rgba(99,85,246,.4);color:#c4b5fd;font-size:.85rem;font-weight:700;letter-spacing:.04em;user-select:none;box-shadow:0 2px 8px rgba(99,85,246,.2)}
+.app.theme-light .center-no-badge{background:#eeecfe;border-color:#c4b5fd;color:#5b4bf0}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:22px;margin-bottom:18px}.card--flush{padding:0;overflow:hidden}.card h3{font-size:1rem;color:#fff;margin-bottom:18px}
 .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px}.stat-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .stat-card{display:flex;align-items:center;gap:14px;min-width:0;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
@@ -1355,9 +1357,9 @@ body:has(.app.theme-light),
 }
 
 .app.theme-light .absentee-chip:hover {
-  background: rgba(52, 211, 153, 0.1);
-  border-color: #10b981;
-  color: #059669;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: #ef4444;
+  color: #dc2626;
 }
 
 .app.theme-light .swipe-phone-pill {
@@ -2689,6 +2691,292 @@ body.theme-light .bottom-nav-item--active .bottom-nav-label {
   align-items: center;
   gap: 8px;
 }
+
+/* ==============================================================================
+   Faculty Access Time Settings Styles
+   ============================================================================== */
+.faculty-access-time-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.settings-icon-pill {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(99, 85, 246, 0.15);
+  color: #818cf8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(99, 85, 246, 0.25);
+  flex-shrink: 0;
+}
+
+.access-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.access-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.access-status-chip--active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.access-status-chip--active .access-status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.access-status-chip--disabled {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.access-status-chip--disabled .access-status-dot {
+  background: #94a3b8;
+}
+
+.access-time-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(99, 85, 246, 0.08);
+  border: 1px solid rgba(99, 85, 246, 0.2);
+  border-radius: 8px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.access-time-banner svg {
+  color: #818cf8;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.current-hours-card {
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.current-hours-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.current-hours-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.current-hours-tz-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  color: #cbd5e1;
+  font-family: monospace;
+}
+
+.current-hours-val {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.current-hours-range {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+}
+
+.current-hours-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(99, 85, 246, 0.2);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 85, 246, 0.3);
+}
+
+.current-hours-val--open .current-hours-range {
+  color: #94a3b8;
+}
+
+.current-hours-val--open .current-hours-badge {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.current-hours-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Custom Toggle Switch */
+.time-toggle-wrap {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.toggle-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: #334155;
+  border-radius: 24px;
+  transition: 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: 0.2s ease;
+}
+
+.toggle-checkbox:checked + .toggle-slider {
+  background-color: #6355f6;
+}
+
+.toggle-checkbox:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.toggle-subtitle {
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.time-inputs-grid {
+  transition: opacity 0.2s ease;
+}
+
+.time-inputs-grid--dimmed {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.faculty-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(99, 85, 246, 0.15);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 85, 246, 0.3);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.faculty-time-pill svg {
+  color: #818cf8;
+}
+
+/* Light theme adaptations */
+.app.theme-light .settings-icon-pill {
+  background: rgba(99, 85, 246, 0.1);
+  color: #4f46e5;
+  border-color: rgba(99, 85, 246, 0.2);
+}
+
+.app.theme-light .access-time-banner {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.app.theme-light .current-hours-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.app.theme-light .current-hours-range {
+  color: #0f172a;
+}
+
+.app.theme-light .time-toggle-wrap {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.app.theme-light .toggle-title {
+  color: #0f172a;
+}
+
 
 
 

@@ -19,12 +19,14 @@ export default function Header({ center }) {
   const isSecondary =
     path === "/students" ||
     path === "/divisions" ||
+    path === "/teachers" ||
     path === "/settings" ||
     path === "/more";
 
   const getPageTitle = () => {
     if (path === "/students") return "Students";
     if (path === "/divisions") return "Divisions";
+    if (path === "/teachers") return "Teachers";
     if (path === "/settings") return "Settings";
     if (path === "/more") return "More";
     return center?.name || "rollbeecall.online";
@@ -49,7 +51,12 @@ export default function Header({ center }) {
           <span className="brand-logo brand-logo--sm">
             <Icon name="logo" size={18} />
           </span>
-          <b>{center?.name}</b>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <b>{center?.name}</b>
+            <span style={{ fontSize: "0.72rem", color: "#a5b4fc", fontWeight: "600" }}>
+              Center No: {center?.center_number ?? 101}
+            </span>
+          </div>
         </div>
       )}
     </header>

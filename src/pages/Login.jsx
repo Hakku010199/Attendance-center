@@ -62,19 +62,48 @@ export default function Login() {
     }
     await refreshCenter();
     setSubmitting(false);
-    navigate(dest.destination || "/onboarding", { replace: true });
+    const returnTarget = (dest.destination === "/onboarding")
+      ? "/onboarding"
+      : (location.state?.returnTo || location.state?.from || dest.destination || "/portal");
+    navigate(returnTarget, { replace: true });
   };
 
+  const isFaculty = location.state?.role === "faculty" || location.state?.returnTo === "/faculty";
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
   return (
     <div className="auth-wrap">
       <div className="auth-card">
+        <div style={{ marginBottom: "6px" }}>
+          <Link
+            to="/"
+            style={{
+              color: "#94a3b8",
+              fontSize: "0.82rem",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <Icon name="arrowLeft" size={14} />
+            <span>Choose Portal (Center / Faculty)</span>
+          </Link>
+        </div>
+
         <div className="auth-header">
-          <div className="auth-eyebrow">Welcome back</div>
-          <h1 className="auth-title">Sign in to your account</h1>
-          <p className="auth-subtitle">Enter your credentials to continue</p>
+          <div className="auth-eyebrow">
+            {isFaculty ? "Faculty Attendance Portal" : "Center Administration"}
+          </div>
+          <h1 className="auth-title">
+            {isFaculty ? "Sign in as Faculty" : "Sign in to Center Portal"}
+          </h1>
+          <p className="auth-subtitle">
+            {isFaculty
+              ? "Enter your credentials to mark daily student attendance"
+              : "Enter your credentials to manage your center"}
+          </p>
         </div>
 
         {!isSupabaseConfigured && (
@@ -194,7 +223,7 @@ export default function Login() {
           >
             {submitting ? "Signing in…" : (
               <>
-                <span>Sign in</span>
+                <span>{isFaculty ? "Sign in to Faculty Portal" : "Sign in to Center"}</span>
                 <Icon name="arrowRight" size={16} />
               </>
             )}

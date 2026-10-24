@@ -1,0 +1,284 @@
+/* ==========================================================================
+   Faculty Portal Dedicated Attendance Layout Styles
+   Guarantees 100% identical dark theme & palette to Center Portal
+   Fully responsive across all screen sizes (desktop, tablet, mobile)
+   ========================================================================== */
+.app.faculty-app,
+.faculty-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: var(--side, #1e1f24) !important;
+  color: var(--text, #f5f6fa) !important;
+  width: 100% !important;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Force column layout on desktop — prevents global.css .app { flex-direction: row } from breaking layout */
+@media (min-width: 768px) {
+  .app.faculty-app,
+  .faculty-app {
+    flex-direction: column !important;
+  }
+}
+
+.faculty-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: #14151a !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100% !important;
+  flex-wrap: nowrap;
+  min-height: 56px;
+}
+
+.faculty-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: nowrap;
+}
+
+.faculty-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none !important;
+  color: #ffffff !important;
+  flex-shrink: 0;
+}
+
+.faculty-logo-badge {
+  width: 32px;
+  height: 32px;
+  background-color: #c8f31d !important;
+  color: #0b1b2b !important;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 8px rgba(200, 243, 29, 0.25);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.faculty-brand-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff !important;
+  white-space: nowrap;
+}
+
+.faculty-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(200, 243, 29, 0.12) !important;
+  border: 1px solid rgba(200, 243, 29, 0.35) !important;
+  color: #c8f31d !important;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  user-select: none;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.faculty-center-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.faculty-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.faculty-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  border: 1px solid transparent;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.faculty-nav-btn--switch {
+  background: rgba(37, 99, 235, 0.16) !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+  color: #93c5fd !important;
+}
+
+.faculty-nav-btn--switch:hover {
+  background: rgba(37, 99, 235, 0.28) !important;
+  border-color: rgba(37, 99, 235, 0.5) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.faculty-nav-btn--exit {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1 !important;
+}
+
+.faculty-nav-btn--exit:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.faculty-nav-btn--signout {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+}
+
+.faculty-nav-btn--signout:hover {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #ef4444 !important;
+}
+
+.faculty-main {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--side, #1e1f24) !important;
+}
+
+.faculty-content {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 28px 48px;
+  box-sizing: border-box;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 680px) {
+  .faculty-topbar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .faculty-brand-name {
+    display: none;
+  }
+  .faculty-role-pill {
+    max-width: 120px;
+    font-size: 0.74rem;
+    padding: 3px 8px;
+  }
+  .faculty-center-tag {
+    display: inline-flex !important;
+    max-width: 120px;
+    font-size: 0.74rem;
+    padding: 3px 8px;
+  }
+  .faculty-nav-btn {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+  .faculty-content {
+    padding: 14px 10px 48px;
+  }
+}
+
+@media (max-width: 520px) {
+  .faculty-topbar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .faculty-topbar-left {
+    gap: 6px;
+  }
+  .faculty-center-tag {
+    display: inline-flex !important; /* Keep center badge visible in mobile view */
+    max-width: 100px;
+    font-size: 0.72rem;
+    padding: 3px 7px;
+  }
+  .faculty-role-pill {
+    max-width: 95px;
+    font-size: 0.72rem;
+    padding: 3px 7px;
+  }
+  .faculty-btn-text {
+    display: none; /* Icon-only buttons on small phones for clean, non-wrapping topbar */
+  }
+  .faculty-nav-btn {
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .faculty-topbar {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .faculty-topbar-left {
+    gap: 4px;
+  }
+  .faculty-logo-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+  .faculty-role-pill {
+    max-width: 80px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  .faculty-center-tag {
+    max-width: 85px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  .faculty-nav-btn {
+    padding: 5px 6px;
+  }
+}

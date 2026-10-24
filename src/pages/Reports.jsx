@@ -9,6 +9,7 @@ import useDivisions from "../hooks/useDivisions.js";
 import { usePortal } from "../components/layout/AppLayout.jsx";
 import { getHistory, todayISO } from "../services/attendanceService.js";
 import { ATTENDANCE_UPDATED } from "../utils/events.js";
+import PrintReportModal from "../components/reports/PrintReportModal.jsx";
 
 const fmtDate = (iso) => {
   try {
@@ -48,6 +49,7 @@ export default function Reports() {
   const [statusFilter, setStatusFilter] = useState(() => savedFilters.statusFilter || "all");
   const [q, setQ] = useState(() => savedFilters.q || "");
   const [debouncedQ, setDebouncedQ] = useState(() => savedFilters.q || "");
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [hasFilter, setHasFilter] = useState(() => {
     return Boolean(
       (savedFilters.date) ||
@@ -112,6 +114,13 @@ export default function Reports() {
 
   return (
     <>
+      <div className="page-actions" style={{ justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
+        <h2 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700" }}>Attendance History & Reports</h2>
+        <Button variant="primary" icon="printer" onClick={() => setShowPrintModal(true)}>
+          Print Report
+        </Button>
+      </div>
+
       <div className="toolbar toolbar--att4">
         <div className="field"><label htmlFor="h-date">Date</label><input id="h-date" className="control" type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} /></div>
         <Select id="h-div" label="Division" options={[{ value: "all", label: "All Divisions" }, ...active.map((d) => ({ value: d.id, label: d.name }))]} value={division} onChange={(e) => setDivision(e.target.value)} />
@@ -160,6 +169,14 @@ export default function Reports() {
         </section>
         );
       }}</Async>
+
+      {showPrintModal && (
+        <PrintReportModal
+          center={center}
+          divisions={active}
+          onClose={() => setShowPrintModal(false)}
+        />
+      )}
     </>
   );
 }

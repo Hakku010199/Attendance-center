@@ -4,6 +4,7 @@
 // compatible with future RLS policies on auth.uid() -> center_members.
 import { supabase } from "../lib/supabase.js";
 import { getCurrentMembership } from "./centerService.js";
+import { getFacultySession } from "./facultyAuthService.js";
 import { notifyDivisionsUpdated } from "../utils/events.js";
 
 const mapRow = (d) => ({
@@ -16,25 +17,50 @@ const mapRow = (d) => ({
 });
 
 const requireCenterId = async () => {
+  // 1. Center Admin / Member session has top priority
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth?.user?.id;
-  if (!uid) throw new Error("Your session has expired. Please log in again.");
-  const { membership, error } = await getCurrentMembership(uid);
-  if (error) throw new Error(error);
-  if (!membership) throw new Error("No center found for this account. Please complete onboarding first.");
-  return membership.center_id;
+  if (uid) {
+    const { membership, error } = await getCurrentMembership(uid);
+    if (!error && membership?.center_id) {
+      return membership.center_id;
+    }
+  }
+
+  // 2. Faculty Teacher session fallback
+  const faculty = getFacultySession();
+  if (faculty?.center?.id) {
+    return faculty.center.id;
+  }
+
+  throw new Error("Your session has expired. Please log in again.");
 };
 
 const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
 
 export const listDivisions = async () => {
   const center_id = await requireCenterId();
+  const { data: auth } = await supabase.auth.getUser();
+  const isCenterAdmin = Boolean(auth?.user?.id);
+
   const { data: divisions, error } = await supabase
     .from("divisions")
     .select("id, center_id, name, status, created_at, updated_at")
     .eq("center_id", center_id)
     .order("created_at", { ascending: true });
   if (error) throw new Error("Unable to load divisions. Please try again.");
+
+  let activeDivisions = divisions ?? [];
+
+  // ONLY restrict by assigned divisions when accessed by a faculty teacher (not center admin)
+  if (!isCenterAdmin) {
+    const faculty = getFacultySession();
+    const assignedIds = faculty?.teacher?.divisionIds || (faculty?.teacher?.divisionId ? [faculty.teacher.divisionId] : []);
+    if (assignedIds.length > 0) {
+      activeDivisions = activeDivisions.filter((d) => assignedIds.includes(d.id));
+    }
+  }
+
   const { data: students, error: sErr } = await supabase
     .from("students")
     .select("id, division_id")
@@ -44,7 +70,7 @@ export const listDivisions = async () => {
   for (const s of students ?? []) {
     if (s.division_id) counts[s.division_id] = (counts[s.division_id] ?? 0) + 1;
   }
-  return (divisions ?? []).map((d) => ({ ...mapRow(d), studentCount: counts[d.id] ?? 0 }));
+  return activeDivisions.map((d) => ({ ...mapRow(d), studentCount: counts[d.id] ?? 0 }));
 };
 
 export const saveDivision = async (v, id) => {

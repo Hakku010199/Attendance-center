@@ -8,7 +8,7 @@ import { LoadingScreen } from "../auth/RouteGuards.jsx";
 import { ATTENDANCE_UPDATED, DIVISIONS_UPDATED } from "../../utils/events.js";
 import { useTheme } from "../../context/ThemeContext.jsx";
 
-const PortalContext = createContext(null);
+export const PortalContext = createContext(null);
 // Center + user come from Supabase session (center_members). Never chosen by the user.
 export const usePortal = () => useContext(PortalContext);
 

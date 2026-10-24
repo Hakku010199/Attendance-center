@@ -1,6 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { isCenterInactive, CENTER_INACTIVE_MSG } from "../../services/authService.js";
+import { getFacultySession } from "../../services/facultyAuthService.js";
+import { checkFacultyAccessTime } from "../../utils/timeSettings.js";
 import LoadingIcon from "../common/LoadingIcon.jsx";
 
 export function LoadingScreen() {
@@ -43,13 +45,37 @@ export function PublicRoute({ children }) {
 export function ProtectedRoute({ children, from }) {
   const { loading, isAuthenticated, centerLoading, center, membership, signOut } = useAuth();
   if (loading || (centerLoading && !center)) return <LoadingScreen />;
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: from || "/portal" }} />;
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: from || "/portal", returnTo: from || "/portal" }} />;
   if (center && isCenterInactive(center)) {
     if (signOut) signOut();
     return <Navigate to="/login" replace state={{ error: CENTER_INACTIVE_MSG }} />;
   }
   if (!membership || center?.onboarding_completed !== true) return <Navigate to="/onboarding" replace />;
   return children;
+}
+
+// Dedicated Faculty Route: protects /faculty and directs unauthenticated users to faculty login
+export function FacultyRoute({ children }) {
+  const { loading, isAuthenticated, centerLoading, center, membership, signOut } = useAuth();
+  const facultySession = getFacultySession();
+
+  // If faculty is logged in via User ID and Password
+  if (facultySession?.teacher && facultySession?.center) {
+    return children;
+  }
+
+  // If center admin is logged in
+  if (loading || (centerLoading && !center)) return <LoadingScreen />;
+  if (isAuthenticated && membership && center?.onboarding_completed === true) {
+    if (isCenterInactive(center)) {
+      if (signOut) signOut();
+      return <Navigate to="/faculty/login" replace state={{ error: CENTER_INACTIVE_MSG }} />;
+    }
+    return children;
+  }
+
+  // Direct unauthenticated faculty users to the dedicated Faculty Login
+  return <Navigate to="/faculty/login" replace />;
 }
 
 // Authenticated pages that do NOT require a completed center (onboarding itself).

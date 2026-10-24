@@ -12,6 +12,7 @@ const NAV_ITEMS = [
 const MANAGEMENT_ITEMS = [
   { to: "/students", label: "Students", icon: "students" },
   { to: "/divisions", label: "Divisions", icon: "divisions" },
+  { to: "/teachers", label: "Teachers", icon: "teacher" },
 ];
 
 const Link = ({ l, onNavigate, className = "" }) => (
@@ -31,7 +32,10 @@ export default function Sidebar({ center, user, open, onClose, onSignOut }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isManagementActive = location.pathname === "/students" || location.pathname === "/divisions";
+  const isManagementActive =
+    location.pathname === "/students" ||
+    location.pathname === "/divisions" ||
+    location.pathname === "/teachers";
   const [managementOpen, setManagementOpen] = useState(isManagementActive);
 
   useEffect(() => {
@@ -50,7 +54,13 @@ export default function Sidebar({ center, user, open, onClose, onSignOut }) {
       <aside className={`sidebar ${open ? "sidebar--open" : ""}`} aria-label="Main navigation">
         <div className="brand">
           <div className="brand-logo"><Icon name="logo" size={20} /></div>
-          <div className="nav-text"><small>CENTER</small><b>{center.name}</b></div>
+          <div className="nav-text">
+            <small>CENTER</small>
+            <b>{center.name}</b>
+            <span style={{ display: "inline-block", fontSize: "0.72rem", color: "#a5b4fc", marginTop: "2px", fontWeight: "600" }}>
+              Center No: {center?.center_number ?? 101}
+            </span>
+          </div>
         </div>
         <nav className="nav">
           {NAV_ITEMS.map((l) => (

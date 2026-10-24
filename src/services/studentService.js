@@ -3,17 +3,24 @@
 // so two different centers can freely reuse the same IDs/names.
 import { supabase } from "../lib/supabase.js";
 import { getCurrentMembership } from "./centerService.js";
+import { getFacultySession } from "./facultyAuthService.js";
 
 const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
 
 const requireCenterId = async () => {
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth?.user?.id;
-  if (!uid) throw new Error("Your session has expired. Please log in again.");
-  const { membership, error } = await getCurrentMembership(uid);
-  if (error) throw new Error(error);
-  if (!membership) throw new Error("No center found for this account. Please complete onboarding first.");
-  return membership.center_id;
+  if (uid) {
+    const { membership, error } = await getCurrentMembership(uid);
+    if (!error && membership?.center_id) {
+      return membership.center_id;
+    }
+  }
+  const faculty = getFacultySession();
+  if (faculty?.center?.id) {
+    return faculty.center.id;
+  }
+  throw new Error("Your session has expired. Please log in again.");
 };
 
 const mapRow = (s, divName, idx) => ({
@@ -31,11 +38,24 @@ const mapRow = (s, divName, idx) => ({
 
 export const listStudents = async () => {
   const center_id = await requireCenterId();
-  const { data: students, error } = await supabase
+  const { data: auth } = await supabase.auth.getUser();
+  const isCenterAdmin = Boolean(auth?.user?.id);
+
+  let query = supabase
     .from("students")
     .select("*")
-    .eq("center_id", center_id)
-    .order("created_at", { ascending: true });
+    .eq("center_id", center_id);
+
+  // If faculty session (teacher), strictly restrict to teacher's assigned divisions
+  if (!isCenterAdmin) {
+    const faculty = getFacultySession();
+    const assignedIds = faculty?.teacher?.divisionIds || (faculty?.teacher?.divisionId ? [faculty.teacher.divisionId] : []);
+    if (assignedIds.length > 0) {
+      query = query.in("division_id", assignedIds);
+    }
+  }
+
+  const { data: students, error } = await query.order("created_at", { ascending: true });
   if (error) throw new Error("Unable to load students. Please try again.");
   const { data: divisions, error: dErr } = await supabase
     .from("divisions")

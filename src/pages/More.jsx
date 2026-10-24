@@ -26,6 +26,12 @@ export default function More() {
       label: "Divisions",
       description: "Manage class divisions and active statuses",
     },
+    {
+      to: "/teachers",
+      icon: "teacher",
+      label: "Teachers",
+      description: "Manage teachers, user IDs, passwords, and assigned divisions",
+    },
   ];
 
   return (

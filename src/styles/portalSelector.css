@@ -1,0 +1,400 @@
+/* ==========================================================================
+   Portal Selector (Landing Entry: Center vs Faculty Options)
+   ========================================================================== */
+.selector-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-color: #08090d;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 50% 0%, rgba(30, 41, 59, 0.45) 0%, transparent 75%),
+    radial-gradient(circle at 15% 25%, rgba(37, 99, 235, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(200, 243, 29, 0.05) 0%, transparent 45%);
+  color: #f8fafc;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.selector-container {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Header & Brand */
+.selector-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.selector-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.selector-brand-badge {
+  width: 44px;
+  height: 44px;
+  background-color: #c8f31d;
+  color: #0b1b2b;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.02em;
+  box-shadow: 0 4px 14px rgba(200, 243, 29, 0.3);
+  user-select: none;
+}
+
+.selector-brand-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.selector-brand-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.selector-brand-domain {
+  font-size: 0.78rem;
+  color: #c8f31d;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.selector-hero-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.selector-hero-desc {
+  font-size: 1rem;
+  color: #94a3b8;
+  max-width: 520px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 2-Card Portal Selection Grid */
+.selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  width: 100%;
+}
+
+.portal-card {
+  position: relative;
+  background: #111217;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 190px;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.portal-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transition: all 0.25s ease;
+}
+
+/* Center card specific accent */
+.portal-card--center::before {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.portal-card--center:hover {
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow:
+    0 24px 60px -10px rgba(37, 99, 235, 0.35),
+    0 0 0 1px rgba(59, 130, 246, 0.3);
+  transform: translateY(-3px);
+}
+
+/* Faculty card specific accent */
+.portal-card--faculty::before {
+  background: linear-gradient(90deg, #c8f31d, #bef218);
+}
+
+.portal-card--faculty:hover {
+  border-color: rgba(200, 243, 29, 0.45);
+  box-shadow:
+    0 24px 60px -10px rgba(200, 243, 29, 0.25),
+    0 0 0 1px rgba(200, 243, 29, 0.3);
+  transform: translateY(-3px);
+}
+
+.portal-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.portal-card-icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.portal-card-icon-badge {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.portal-card:hover .portal-card-icon-badge {
+  transform: scale(1.08);
+}
+
+.portal-card--center .portal-card-icon-badge {
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.portal-card--faculty .portal-card-icon-badge {
+  background: rgba(200, 243, 29, 0.15);
+  border: 1px solid rgba(200, 243, 29, 0.35);
+  color: #c8f31d;
+}
+
+.portal-card-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.portal-card--center .portal-card-tag {
+  background: rgba(37, 99, 235, 0.1);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.portal-card--faculty .portal-card-tag {
+  background: rgba(200, 243, 29, 0.1);
+  color: #c8f31d;
+  border: 1px solid rgba(200, 243, 29, 0.3);
+}
+
+.portal-card-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.portal-card-desc {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.portal-card-features {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.portal-card-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.portal-feature-bullet {
+  color: #c8f31d;
+  font-weight: bold;
+}
+
+.portal-card--center .portal-feature-bullet {
+  color: #60a5fa;
+}
+
+/* Action Buttons inside cards */
+.portal-card-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.portal-card--center .portal-card-btn {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.portal-card--center .portal-card-btn:hover {
+  background: #3b82f6;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+}
+
+.portal-card--faculty .portal-card-btn {
+  background: #c8f31d;
+  color: #0b1b2b;
+  box-shadow: 0 4px 14px rgba(200, 243, 29, 0.25);
+}
+
+.portal-card--faculty .portal-card-btn:hover {
+  background: #d6fa3d;
+  box-shadow: 0 6px 18px rgba(200, 243, 29, 0.4);
+}
+
+/* Session Information Banner */
+.selector-session-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.selector-session-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-signout-link {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.15s ease;
+}
+
+.selector-signout-link:hover {
+  color: #f87171;
+}
+
+.selector-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.selector-footer-link {
+  color: #c8f31d;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.selector-footer-link:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .selector-page {
+    padding: 24px 16px;
+  }
+  .selector-container {
+    max-width: 100%;
+    gap: 22px;
+  }
+  .selector-grid {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    gap: 14px;
+  }
+  .selector-hero-title {
+    font-size: 1.55rem;
+  }
+  .portal-card {
+    padding: 18px 18px;
+    min-height: auto;
+    border-radius: 18px;
+    gap: 16px;
+  }
+  .portal-card-top {
+    gap: 10px;
+  }
+  .portal-card-icon-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  .portal-card-title {
+    font-size: 1.28rem;
+  }
+  .portal-card-btn {
+    height: 44px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+}
+

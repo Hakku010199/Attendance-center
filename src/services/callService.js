@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase.js";
 import { getCurrentMembership } from "./centerService.js";
+import { getFacultySession } from "./facultyAuthService.js";
 
 /**
  * Ensures caller is authenticated and resolves center_id.
@@ -7,13 +8,17 @@ import { getCurrentMembership } from "./centerService.js";
 export const requireCenterId = async () => {
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth?.user?.id;
-  if (!uid) throw new Error("Your session has expired. Please log in again.");
-  const { membership, error } = await getCurrentMembership(uid);
-  if (error) throw new Error(error);
-  if (!membership) {
-    throw new Error("No center found for this account. Please complete onboarding first.");
+  if (uid) {
+    const { membership, error } = await getCurrentMembership(uid);
+    if (!error && membership?.center_id) {
+      return membership.center_id;
+    }
   }
-  return membership.center_id;
+  const faculty = getFacultySession();
+  if (faculty?.center?.id) {
+    return faculty.center.id;
+  }
+  throw new Error("Your session has expired. Please log in again.");
 };
 
 const isTableMissingError = (err) => {

@@ -4,10 +4,19 @@ import Button from "../components/common/Button.jsx";
 import Input from "../components/common/Input.jsx";
 import { useToast } from "../components/common/Toast.jsx";
 import { usePortal } from "../components/layout/AppLayout.jsx";
-import { updateCenter } from "../services/centerService.js";
+import { updateCenter, updateFacultyTimeSettings } from "../services/centerService.js";
 import { updatePassword, isGoogleUser, hasUserSetPassword } from "../services/authService.js";
 import { useTheme } from "../context/ThemeContext.jsx";
 import Icon from "../components/common/Icon.jsx";
+import {
+  formatTime12h,
+  normalizeTime24h,
+  timeToMinutes,
+  SUPPORTED_TIMEZONES,
+  DEFAULT_TIMEZONE,
+  DEFAULT_START_TIME,
+  DEFAULT_END_TIME,
+} from "../utils/timeSettings.js";
 
 export default function Settings() {
   const { center, user, authUser, membership, reload, signOut } = usePortal();
@@ -36,6 +45,45 @@ export default function Settings() {
     if (r.errors) return setErrors(r.errors);
     if (r.error) return setFormError(r.error);
     reload(); toast("Center information saved.");
+  };
+
+  // Faculty Access Time Settings
+  const [timeEnabled, setTimeEnabled] = useState(
+    Boolean(center.faculty_time_restriction_enabled ?? false)
+  );
+  const [startTime, setStartTime] = useState(
+    normalizeTime24h(center.faculty_start_time, DEFAULT_START_TIME)
+  );
+  const [endTime, setEndTime] = useState(
+    normalizeTime24h(center.faculty_end_time, DEFAULT_END_TIME)
+  );
+  const [timezone, setTimezone] = useState(center.timezone || DEFAULT_TIMEZONE);
+  const [timeSaving, setTimeSaving] = useState(false);
+  const [timeSuccess, setTimeSuccess] = useState("");
+  const [timeError, setTimeError] = useState("");
+
+  const handleSaveTimeSettings = async (e) => {
+    e.preventDefault();
+    setTimeSaving(true);
+    setTimeSuccess("");
+    setTimeError("");
+
+    const res = await updateFacultyTimeSettings({
+      enabled: timeEnabled,
+      startTime,
+      endTime,
+      timezone,
+    });
+    setTimeSaving(false);
+
+    if (res?.error) {
+      setTimeError(res.error);
+      return;
+    }
+
+    setTimeSuccess("Faculty access time settings saved successfully.");
+    toast("Faculty access time settings saved.");
+    if (reload) reload();
   };
 
 
@@ -83,6 +131,130 @@ export default function Settings() {
         </div>
         {formError && <p className="form-error" role="alert">{formError}</p>}
         <div><Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button></div>
+      </form>
+
+      {/* Faculty Access Time Settings */}
+      <form noValidate onSubmit={handleSaveTimeSettings} className="card form faculty-access-time-card">
+        {/* Toggle switch */}
+        <div className="time-toggle-wrap">
+          <label className="toggle-switch-label" htmlFor="faculty-time-toggle">
+            <input
+              id="faculty-time-toggle"
+              type="checkbox"
+              className="toggle-checkbox"
+              checked={timeEnabled}
+              onChange={(e) => {
+                setTimeEnabled(e.target.checked);
+                setTimeSuccess("");
+                setTimeError("");
+              }}
+            />
+            <span className="toggle-slider" />
+            <div className="toggle-text">
+              <span className="toggle-title">Enable Daily Faculty Time Restrictions</span>
+              <span className="toggle-subtitle muted">
+                Allow faculty to log in and mark attendance only within the hours specified below
+              </span>
+            </div>
+          </label>
+        </div>
+
+        {/* Time Inputs */}
+        <div className={`form-grid time-inputs-grid ${!timeEnabled ? "time-inputs-grid--dimmed" : ""}`}>
+          <div className="field">
+            <label htmlFor="faculty-start-time">
+              Daily Faculty Login Start Time
+              {startTime && (
+                <span style={{ marginLeft: "8px", color: "#a5b4fc", fontSize: "0.82rem", fontWeight: "600" }}>
+                  ({formatTime12h(startTime)})
+                </span>
+              )}
+            </label>
+            <input
+              id="faculty-start-time"
+              type="time"
+              className="control"
+              value={startTime}
+              disabled={!timeEnabled}
+              onChange={(e) => {
+                setStartTime(e.target.value);
+                setTimeSuccess("");
+                setTimeError("");
+              }}
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="faculty-end-time">
+              Daily Faculty Login End Time
+              {endTime && (
+                <span style={{ marginLeft: "8px", color: "#a5b4fc", fontSize: "0.82rem", fontWeight: "600" }}>
+                  ({formatTime12h(endTime)})
+                </span>
+              )}
+            </label>
+            <input
+              id="faculty-end-time"
+              type="time"
+              className="control"
+              value={endTime}
+              disabled={!timeEnabled}
+              onChange={(e) => {
+                setEndTime(e.target.value);
+                setTimeSuccess("");
+                setTimeError("");
+              }}
+            />
+          </div>
+
+          {timeEnabled && startTime && endTime && timeToMinutes(startTime) > timeToMinutes(endTime) && (
+            <div style={{ gridColumn: "1 / -1", background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: "8px", padding: "10px 14px", color: "#fbbf24", fontSize: "0.84rem", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+              <Icon name="clock" size={16} style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div>
+                <strong>Overnight Window:</strong> Configured from {formatTime12h(startTime)} through midnight until {formatTime12h(endTime)} tomorrow. (If you meant afternoon/evening, ensure PM is selected, e.g. 17:00 for 5:00 PM).
+              </div>
+            </div>
+          )}
+
+          <div className="field" style={{ gridColumn: "1 / -1" }}>
+            <label htmlFor="faculty-timezone">Center Operating Timezone</label>
+            <select
+              id="faculty-timezone"
+              className="control"
+              value={timezone}
+              disabled={!timeEnabled}
+              onChange={(e) => {
+                setTimezone(e.target.value);
+                setTimeSuccess("");
+                setTimeError("");
+              }}
+            >
+              {SUPPORTED_TIMEZONES.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {timeSuccess && (
+          <div className="form-success" role="status" style={{ margin: "14px 0" }}>
+            <Icon name="check" size={16} />
+            <span>{timeSuccess}</span>
+          </div>
+        )}
+        {timeError && (
+          <p className="form-error" role="alert" style={{ margin: "14px 0" }}>
+            {timeError}
+          </p>
+        )}
+
+        <div style={{ marginTop: "16px" }}>
+          <Button type="submit" disabled={timeSaving}>
+            {timeSaving ? "Saving..." : "Save Time Settings"}
+          </Button>
+        </div>
       </form>
 
       <section className="card form">
@@ -134,6 +306,23 @@ export default function Settings() {
             </div>
             {theme === "light" && <span className="theme-check-badge"><Icon name="check" size={14} /></span>}
           </button>
+        </div>
+      </section>
+
+      <section className="card form">
+        <h3>Portal Selection</h3>
+        <p className="muted" style={{ marginTop: "-8px", marginBottom: "16px" }}>
+          Switch between Center Administration and Faculty Attendance portals.
+        </p>
+        <div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/")}
+            icon="arrowLeft"
+          >
+            Choose Portal (Center / Faculty)
+          </Button>
         </div>
       </section>
 

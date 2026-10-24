@@ -44,13 +44,60 @@ export const getCurrentMembership = async (userId) => {
   return { membership: data ?? null, error: null };
 };
 
+export const getNextCenterNumber = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("centers")
+      .select("center_number")
+      .not("center_number", "is", null)
+      .order("center_number", { ascending: false })
+      .limit(1);
+
+    if (!error && data && data.length > 0 && typeof data[0].center_number === "number") {
+      return Math.max(data[0].center_number + 1, 101);
+    }
+
+    const { count, error: cErr } = await supabase
+      .from("centers")
+      .select("id", { count: "exact", head: true });
+
+    if (!cErr && typeof count === "number" && count > 0) {
+      return 100 + count + 1;
+    }
+  } catch (err) {
+    console.warn("[centerService] getNextCenterNumber error:", err);
+  }
+  return 101;
+};
+
 export const getCurrentCenter = async (userId) => {
   const { membership, error } = await getCurrentMembership(userId);
   if (error) return { center: null, membership: null, error };
   if (!membership) return { center: null, membership: null, error: null };
   const { data, error: cErr } = await supabase.from("centers").select("*").eq("id", membership.center_id).maybeSingle();
   if (cErr) return { center: null, membership, error: "Unable to load your center. Please try again." };
-  return { center: data ?? null, membership, error: null };
+
+  let center = data ?? null;
+
+  // Auto-backfill center_number if missing
+  if (center && (center.center_number === null || center.center_number === undefined)) {
+    try {
+      const nextNum = await getNextCenterNumber();
+      const { data: updated, error: uErr } = await supabase
+        .from("centers")
+        .update({ center_number: nextNum })
+        .eq("id", center.id)
+        .select()
+        .single();
+      if (!uErr && updated) {
+        center = updated;
+      }
+    } catch (e) {
+      console.warn("[centerService] auto-assign center_number skipped:", e);
+    }
+  }
+
+  return { center, membership, error: null };
 };
 
 export const getCurrentUserCenter = async (userId) => getCurrentCenter(userId);
@@ -79,6 +126,42 @@ export const updateCenter = async (values) => {
     .select()
     .single();
   if (error) return { error: "Unable to save center information. Please try again." };
+  return { data };
+};
+
+export const updateFacultyTimeSettings = async ({
+  enabled,
+  startTime,
+  endTime,
+  timezone,
+}) => {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth?.user?.id;
+  if (!uid) return { error: "Your session has expired. Please log in again." };
+  const { membership, error: mErr } = await getCurrentMembership(uid);
+  if (mErr) return { error: mErr };
+  if (!membership) return { error: "No center found for this account. Please complete onboarding first." };
+
+  const payload = {
+    faculty_time_restriction_enabled: Boolean(enabled),
+    faculty_start_time: startTime ? `${startTime}:00`.slice(0, 8) : "07:00:00",
+    faculty_end_time: endTime ? `${endTime}:00`.slice(0, 8) : "10:00:00",
+    timezone: timezone || "Asia/Kolkata",
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("centers")
+    .update(payload)
+    .eq("id", membership.center_id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[centerService] updateFacultyTimeSettings error:", error);
+    return { error: error?.message || "Unable to save faculty access time settings. Please try again." };
+  }
+
   return { data };
 };
 
@@ -138,6 +221,8 @@ export const createCenterOnboarding = async ({ name, email, phone, address }) =>
     })
   );
 
+  const nextCenterNo = await getNextCenterNumber();
+
   const fullPayload = {
     id: centerId,
     name: name.trim(),
@@ -147,6 +232,7 @@ export const createCenterOnboarding = async ({ name, email, phone, address }) =>
     address: address?.trim() || null,
     status: "active",
     onboarding_completed: false,
+    center_number: nextCenterNo,
   };
 
   // 1. Insert center (without requiring .select() before membership exists)
@@ -206,6 +292,7 @@ export const createCenterOnboarding = async ({ name, email, phone, address }) =>
       email: email.trim(),
       phone: phone.trim(),
       address: address?.trim() || null,
+      center_number: nextCenterNo,
       onboarding_completed: true,
     },
   };

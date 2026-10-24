@@ -372,14 +372,14 @@ export default function Attendance() {
     }
     setAbsentMap(updated);
     saveCachedAbsences(date, divisionId, updated);
-    setSubmitNotice(null);
+    if (submitNotice) setSubmitNotice(null);
   };
 
   const handleMarkAllPresent = () => {
     const updated = {};
     setAbsentMap(updated);
     saveCachedAbsences(date, divisionId, updated);
-    setSubmitNotice(null);
+    if (submitNotice) setSubmitNotice(null);
   };
 
   const handleMarkAllAbsent = () => {
@@ -389,7 +389,7 @@ export default function Attendance() {
     }
     setAbsentMap(updated);
     saveCachedAbsences(date, divisionId, updated);
-    setSubmitNotice(null);
+    if (submitNotice) setSubmitNotice(null);
   };
 
   const handleReMarkPresent = (studentId) => {

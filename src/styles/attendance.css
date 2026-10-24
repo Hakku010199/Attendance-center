@@ -604,6 +604,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-top: 18px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 @media (max-width: 580px) {
@@ -619,13 +621,22 @@
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   white-space: nowrap;
   font-family: inherit;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.btn-action:focus,
+.btn-action:focus-visible {
+  outline: none !important;
 }
 
 .btn-action--present {
@@ -634,9 +645,11 @@
   border-color: rgba(52, 211, 153, 0.35);
 }
 
-.btn-action--present:hover:not(:disabled) {
-  background: #34d399;
-  color: #064e3b;
+@media (hover: hover) {
+  .btn-action--present:hover:not(:disabled) {
+    background: #34d399;
+    color: #064e3b;
+  }
 }
 
 .btn-action--submit {
@@ -645,18 +658,21 @@
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
   font-weight: 700;
+  transform: translateZ(0);
 }
 
-.btn-action--submit:hover:not(:disabled) {
-  background: #14151a;
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+@media (hover: hover) {
+  .btn-action--submit:hover:not(:disabled) {
+    background: #14151a;
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+  }
 }
 
 .btn-action--submit:active:not(:disabled) {
   background: #000000;
-  transform: translateY(1px) scale(0.98);
+  transform: translateZ(0) scale(0.99);
 }
 
 .btn-action--absent {
@@ -665,9 +681,11 @@
   border-color: rgba(248, 113, 113, 0.35);
 }
 
-.btn-action--absent:hover:not(:disabled) {
-  background: #f87171;
-  color: #450a0a;
+@media (hover: hover) {
+  .btn-action--absent:hover:not(:disabled) {
+    background: #f87171;
+    color: #450a0a;
+  }
 }
 
 .btn-action:disabled {
@@ -682,6 +700,8 @@
   border-radius: 12px;
   background: rgba(248, 113, 113, 0.06);
   border: 1px solid rgba(248, 113, 113, 0.25);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .absentees-header {
@@ -712,25 +732,40 @@
   gap: 8px;
   padding: 7px 12px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #fef2f2;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  color: #f8fafc;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   font-family: inherit;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-.absentee-chip:hover {
-  background: rgba(52, 211, 153, 0.2);
-  border-color: #34d399;
-  color: #34d399;
-  transform: scale(1.02);
+.absentee-chip:focus,
+.absentee-chip:focus-visible {
+  outline: none !important;
+}
+
+@media (hover: hover) {
+  .absentee-chip:hover {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(248, 113, 113, 0.5);
+    color: #ffffff;
+  }
+}
+
+.absentee-chip:active {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(248, 113, 113, 0.6);
 }
 
 .absentee-roll {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: #fca5a5;
 }
 
 .absentee-name {
@@ -739,11 +774,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #f8fafc;
 }
 
 .absentee-action {
   opacity: 0.6;
   font-size: 0.8rem;
+  color: #94a3b8;
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .absentee-chip:hover .absentee-action {
+    color: #fca5a5;
+    opacity: 1;
+  }
 }
 
 /* --- Attendance View Mode Header & Toggle --- */

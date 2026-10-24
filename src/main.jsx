@@ -6,6 +6,7 @@ import { ToastProvider } from "./components/common/Toast.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import "./styles/global.css";
+import "./styles/faculty.css";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter><ToastProvider><AuthProvider><ThemeProvider><App /></ThemeProvider></AuthProvider></ToastProvider></BrowserRouter>
