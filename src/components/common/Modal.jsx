@@ -75,17 +75,34 @@ export function ConfirmDialog({ title, message, error, busy, onConfirm, onCancel
 }
 
 // Office pattern: dangerous deletes require typing an exact phrase.
-export function ConfirmModal({ title, message, confirmLabel = "Delete", requireText, busy, onConfirm, onCancel }) {
+export function ConfirmModal({ title, message, confirmLabel = "Delete", requireText, error, busy, onConfirm, onCancel }) {
   const [text, setText] = useState("");
-  const ok = !requireText || text.trim() === requireText;
+  const ok = !requireText || text.trim().toLowerCase() === requireText.trim().toLowerCase();
   return (
     <Modal title={title} onClose={onCancel}>
       <p className="confirm-text">{message}</p>
+      {error && <div className="notice notice--error" role="alert" style={{ marginBottom: "14px" }}>{error}</div>}
       {requireText && <p className="muted">Type <code>{requireText}</code> to confirm.</p>}
       {requireText && (
-        <div className="field"><label htmlFor="confirm-text">Confirmation</label><input id="confirm-text" className="control" value={text} onChange={(e) => setText(e.target.value)} placeholder={requireText} autoComplete="off" /></div>
+        <div className="field">
+          <label htmlFor="confirm-text">Confirmation</label>
+          <input
+            id="confirm-text"
+            className="control"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={requireText}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck="false"
+          />
+        </div>
       )}
-      <div className="modal-actions"><Button variant="secondary" onClick={onCancel}>Cancel</Button><Button variant="danger" disabled={!ok || busy} onClick={onConfirm}>{busy ? "Deleting..." : confirmLabel}</Button></div>
+      <div className="modal-actions">
+        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Button variant="danger" disabled={!ok || busy} onClick={onConfirm}>{busy ? "Deleting..." : confirmLabel}</Button>
+      </div>
     </Modal>
   );
 }

@@ -53,9 +53,15 @@ export default function Divisions() {
     setForm(null); refetch(); toast(form.division ? "Division updated." : "Division created."); return r;
   };
   const remove = async () => {
-    setBusy(true); const r = await deleteDivision(del.id); setBusy(false);
+    setBusy(true);
+    setDelError("");
+    const r = await deleteDivision(del.id);
+    setBusy(false);
     if (r.error) return setDelError(r.error);
-    setDel(null); setDelError(""); refetch(); toast("Division deleted.");
+    setDel(null);
+    setDelError("");
+    refetch();
+    toast(r.deletedStudentCount > 0 ? "Division and its students deleted." : "Division deleted.");
   };
 
   const rows = divisions.filter((d) => (status === "all" || d.status === status) && d.name.toLowerCase().includes(q.trim().toLowerCase()));
@@ -84,8 +90,25 @@ export default function Divisions() {
         )}
       </section>
       {form && <Modal title={form.division ? "Edit Division" : "Add Division"} onClose={() => setForm(null)}><DivisionForm initial={form.division} onSave={save} onCancel={() => setForm(null)} /></Modal>}
-      {del && <ConfirmModal title="Delete Division" message={`Delete "${del.name}" and all its data? This cannot be undone.`} requireText={`Delete ${del.name}`} confirmLabel="Delete Division" busy={busy} onConfirm={remove} onCancel={() => { setDel(null); setDelError(""); }} />}
-      {delError && del && <div className="notice" role="alert">{delError}</div>}
+      {del && (
+        <ConfirmModal
+          title="Delete Division"
+          message={`Delete "${del.name}" and all its data? This will permanently remove ${
+            del.studentCount > 0
+              ? `all ${del.studentCount} student${del.studentCount === 1 ? "" : "s"} in this division, their attendance records, and attendance sessions.`
+              : "its attendance sessions and records."
+          } This cannot be undone.`}
+          requireText={`Delete ${del.name}`}
+          confirmLabel="Delete Division"
+          error={delError}
+          busy={busy}
+          onConfirm={remove}
+          onCancel={() => {
+            setDel(null);
+            setDelError("");
+          }}
+        />
+      )}
     </>
   );
 }

@@ -1,7 +1,18 @@
+import { useMemo } from "react";
 import StudentCard from "./StudentCard.jsx";
 import LoadingIcon from "../common/LoadingIcon.jsx";
 
 export default function StudentGrid({ students = [], absentMap = {}, onToggle, loading = false }) {
+  // Sort students in natural numeric roll number order as it is
+  const sortedStudents = useMemo(() => {
+    return [...students].sort((a, b) => {
+      const numA = parseInt(a.rollNumber, 10);
+      const numB = parseInt(b.rollNumber, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a.rollNumber || "").localeCompare(String(b.rollNumber || ""), undefined, { numeric: true });
+    });
+  }, [students]);
+
   if (loading) {
     return (
       <div className="student-grid-wrapper">
@@ -13,7 +24,7 @@ export default function StudentGrid({ students = [], absentMap = {}, onToggle, l
     );
   }
 
-  if (students.length === 0) {
+  if (sortedStudents.length === 0) {
     return (
       <div className="student-grid-wrapper">
         <div className="student-grid-empty">
@@ -26,7 +37,7 @@ export default function StudentGrid({ students = [], absentMap = {}, onToggle, l
   return (
     <div className="student-grid-wrapper">
       <div className="student-grid">
-        {students.map((student) => (
+        {sortedStudents.map((student) => (
           <StudentCard
             key={student.id}
             student={student}

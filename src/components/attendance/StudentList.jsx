@@ -1,6 +1,21 @@
+import { useMemo } from "react";
 import LoadingIcon from "../common/LoadingIcon.jsx";
 
 export default function StudentList({ students = [], absentMap = {}, onToggle, loading = false }) {
+  // Sort students alphabetically by name; if names are identical, secondary sort by roll number
+  const sortedStudents = useMemo(() => {
+    return [...students].sort((a, b) => {
+      const nameA = String(a.name || "").trim();
+      const nameB = String(b.name || "").trim();
+      const comp = nameA.localeCompare(nameB, undefined, { sensitivity: "base", numeric: true });
+      if (comp !== 0) return comp;
+      const numA = parseInt(a.rollNumber, 10);
+      const numB = parseInt(b.rollNumber, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a.rollNumber || "").localeCompare(String(b.rollNumber || ""));
+    });
+  }, [students]);
+
   if (loading) {
     return (
       <div className="student-list-wrapper">
@@ -12,7 +27,7 @@ export default function StudentList({ students = [], absentMap = {}, onToggle, l
     );
   }
 
-  if (students.length === 0) {
+  if (sortedStudents.length === 0) {
     return (
       <div className="student-list-wrapper">
         <div className="student-grid-empty">
@@ -25,7 +40,7 @@ export default function StudentList({ students = [], absentMap = {}, onToggle, l
   return (
     <div className="student-list-wrapper">
       <div className="student-list-grid">
-        {students.map((student) => {
+        {sortedStudents.map((student) => {
           const isAbsent = Boolean(absentMap[student.id]);
           const roll = student.rollNumber ?? student.studentId ?? "—";
           return (

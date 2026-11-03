@@ -5,7 +5,7 @@
 import { supabase } from "../lib/supabase.js";
 import { getCurrentMembership } from "./centerService.js";
 import { getFacultySession } from "./facultyAuthService.js";
-import { notifyDivisionsUpdated } from "../utils/events.js";
+import { notifyDivisionsUpdated, notifyAttendanceUpdated } from "../utils/events.js";
 
 const mapRow = (d) => ({
   id: d.id,
@@ -136,28 +136,144 @@ export const saveDivision = async (v, id) => {
 export const deleteDivision = async (id) => {
   try {
     const center_id = await requireCenterId();
-    const { data: kids, error: kErr } = await supabase
+
+    // 1. Fetch all students belonging to this division
+    const { data: students, error: stErr } = await supabase
       .from("students")
       .select("id")
       .eq("center_id", center_id)
-      .eq("division_id", id)
-      .limit(1);
-    if (kErr) return { error: "Unable to delete division. Please try again." };
-    if ((kids ?? []).length > 0)
-      return { error: "This division contains students. Reassign or remove them first." };
+      .eq("division_id", id);
+    if (stErr) {
+      console.error("[deleteDivision] students fetch error:", stErr);
+      return { error: "Unable to inspect students in this division. Please try again." };
+    }
+
+    const studentIds = (students || []).map((s) => s.id);
+
+    // 2. Cascade delete attendance records & call logs for these students
+    if (studentIds.length > 0) {
+      try {
+        await supabase
+          .from("attendance_records")
+          .delete()
+          .eq("center_id", center_id)
+          .in("student_id", studentIds);
+      } catch (attRecErr) {
+        console.warn("[deleteDivision] attendance_records cleanup non-fatal:", attRecErr);
+      }
+
+      try {
+        await supabase
+          .from("attendance")
+          .delete()
+          .eq("center_id", center_id)
+          .in("student_id", studentIds);
+      } catch (attErr) {
+        console.warn("[deleteDivision] attendance cleanup non-fatal:", attErr);
+      }
+
+      try {
+        await supabase
+          .from("student_call_logs")
+          .delete()
+          .eq("center_id", center_id)
+          .in("student_id", studentIds);
+      } catch (callErr) {
+        console.warn("[deleteDivision] call logs cleanup non-fatal:", callErr);
+      }
+
+      // Delete the students belonging to this division
+      const { error: delStuErr } = await supabase
+        .from("students")
+        .delete()
+        .eq("center_id", center_id)
+        .eq("division_id", id);
+      if (delStuErr) {
+        console.error("[deleteDivision] delete students error:", delStuErr);
+        return { error: "Unable to remove students assigned to this division. Please try again." };
+      }
+    }
+
+    // 3. Delete attendance sessions and session records for this division
+    try {
+      const { data: sessions } = await supabase
+        .from("attendance_sessions")
+        .select("id")
+        .eq("center_id", center_id)
+        .eq("division_id", id);
+      if (sessions && sessions.length > 0) {
+        const sessionIds = sessions.map((s) => s.id);
+        await supabase
+          .from("attendance_records")
+          .delete()
+          .eq("center_id", center_id)
+          .in("session_id", sessionIds);
+        await supabase
+          .from("attendance_sessions")
+          .delete()
+          .eq("center_id", center_id)
+          .eq("division_id", id);
+      }
+      await supabase
+        .from("attendance")
+        .delete()
+        .eq("center_id", center_id)
+        .eq("division_id", id);
+    } catch (sessErr) {
+      console.warn("[deleteDivision] sessions cleanup non-fatal:", sessErr);
+    }
+
+    // 4. Update teachers referencing this division
+    try {
+      await supabase
+        .from("teachers")
+        .update({ division_id: null })
+        .eq("center_id", center_id)
+        .eq("division_id", id);
+
+      const { data: teachers } = await supabase
+        .from("teachers")
+        .select("id, division_ids")
+        .eq("center_id", center_id);
+      for (const t of teachers || []) {
+        if (Array.isArray(t.division_ids) && t.division_ids.includes(id)) {
+          const updatedIds = t.division_ids.filter((divId) => divId !== id);
+          await supabase
+            .from("teachers")
+            .update({ division_ids: updatedIds })
+            .eq("id", t.id)
+            .eq("center_id", center_id);
+        }
+      }
+    } catch (tErr) {
+      console.warn("[deleteDivision] teacher cleanup non-fatal:", tErr);
+    }
+
+    // 5. Delete the division itself
     const { data: deleted, error } = await supabase
       .from("divisions")
       .delete()
       .eq("id", id)
       .eq("center_id", center_id)
       .select();
-    if (error) return { error: "Unable to delete division. Please try again." };
+
+    if (error) {
+      console.error("[deleteDivision] Supabase delete division error:", error);
+      if (error.code === "23503" || String(error.message || "").includes("foreign key")) {
+        return { error: "Cannot delete this division because other database records depend on it." };
+      }
+      return { error: error.message || "Unable to delete division. Please try again." };
+    }
+
     if (!deleted || deleted.length === 0) {
       return { error: "Division not found or access denied." };
     }
+
     notifyDivisionsUpdated();
-    return { data: true };
+    notifyAttendanceUpdated();
+    return { data: true, deletedStudentCount: studentIds.length };
   } catch (e) {
+    console.error("[deleteDivision] catch error:", e);
     return { error: e?.message || "Unable to delete division. Please try again." };
   }
 };
